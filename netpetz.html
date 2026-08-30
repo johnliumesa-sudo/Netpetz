@@ -728,13 +728,79 @@ function gameTick() {
   updateCurrencyDisplay();
 }
 
+// ---- Pet Species Definitions ----
 // ═══ SeedRom - hash noise ═══
 function h(x,y,z){var r=Math.imul(x,668265261)^Math.imul(y,374761393)^Math.imul(z,2654435769);r=Math.imul(r^r>>>15,2246822507);r=Math.imul(r^r>>>13,3266489909);return((r^r>>>16)>>>0)/4294967296;}
 var s=function(t){return t*t*(3-2*t);};
 var SR=function(se){this.se=se|0;};
 SR.prototype.at=function(x,y){var fx=Math.floor(x),fy=Math.floor(y),sx=s(x-fx),sy=s(y-fy);var a=h(fx,fy,this.se),b=h(fx+1,fy,this.se),c=h(fx,fy+1,this.se),d=h(fx+1,fy+1,this.se);return(a*(1-sx)+b*sx)*(1-sy)+(c*(1-sx)+d*sx)*sy;};
 SR.prototype.fbm=function(x,y,o,lc,g){o=o||5;lc=lc||2;g=g||0.5;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){v+=this.at(px,py)*a;m+=a;a*=g;px*=lc;py*=lc;}return v/m;};
-SR.prototype.rdg=function(x,y,o){o=o||4;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){var n=1-Math.abs(this.at(px,py)*2-1);v+=n*n*a;m+=a;a*=0.5;px*=2;py*=2;}return v/m;};// ---- Pet Species Definitions ----
+SR.prototype.rdg=function(x,y,o){o=o||4;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){var n=1-Math.abs(this.at(px,py)*2-1);v+=n*n*a;m+=a;a*=0.5;px*=2;py*=2;}return v/m;};
+// TERRIN (20 biomes)
+var TP=['deep','oce an','sh allow','river','ice','be ach','des ert','savna','gr ass','stepe','forst','taiga','jung le','swamp','tun ra','snow','rock','pe ak','la va','ash'];
+var TC={deep:0x2E4A5C,ocen:0x3D6478,shllow:0x6E9AA8,river:0x5A8CA0,ice:0xC6D6D8,baech:0xD9C89A,desert:0xD8C088,savna:0xC6B063,gras:0x7CB05A,stepe:0xB2B080,forst:0x4E8C42,taiga:0x41705C,jngle:0x3C8442,swamp:0x5E7248,tunra:0xACB098,snow:0xE4E4DC,rock:0x8A8173,pek:0xA69E90,lva:0xD4602A,ash:0x6A6158};
+var WSEED=Math.floor(Math.random()*999999);
+var WN=new SR(WSEED);
+var WM=[],WV=[];
+var WSIZE=200;
+function genWorld(){
+  for(var y=0;y<WSIZE;y++)for(var x=0;x<WSIZE;x++){
+    var nx=x/WSIZE,ny=y/WSIZE;
+    var e=WN.fbm(nx*6,ny*6,5);
+    var t=WN.fbm(nx*4,ny*4,3)-0.5;
+    var r=WN.fbm(nx*5,ny*5,4);
+    var lnd=e>0.38?1:0;
+    var idx=y*WSIZE+x;
+    WM[idx]=e;WV[idx]=0;
+    if(!lnd){WV[idx]=e>0.25?2:1;}
+    else{
+      if(e<0.42)WV[idx]=5;
+      else if(e>0.85)WV[idx]=17;
+      else if(e>0.78)WV[idx]=t<-0.1?16:15;
+      else if(t<-0.3){WV[idx]=r<0.3?11:12;}
+      else if(t>0.4){WV[idx]=r<0.2?7:r<0.45?8:9;}
+      else{WV[idx]=r<0.25?6:r<0.5?7:r<0.7?8:10;}
+    }
+  }
+}
+// PIXI TILEMP RENDERER
+var tileMapContainer=null;
+var mapCamX=0,mapCamY=0;
+function initTileMap(){
+  tileMapContainer=new PIXI.Container();
+  tileMapContainer.visible=false;
+  renderStage.addChild(tileMapContainer);
+}
+function renderTileMap(){
+  if(!tileMapContainer||!tileMapContainer.visible) return;
+  if(typeof WN=="undefined"||WV.length===0) genWorld();
+  tileMapContainer.removeChildren();
+  var tg=new PIXI.Graphics();
+  var ts=4,vw=Math.ceil(1024/ts)+2,vh=Math.ceil(768/ts)+2;
+  var ox=Math.max(0,Math.floor(mapCamX/ts)),oy=Math.max(0,Math.floor(mapCamY/ts));
+  for(var y=0;y<vh;y++)for(var x=0;x<vw;x++){
+    var wx=ox+x,wy=oy+y;
+    if(wx>=WSIZE||wy>=WSIZE) continue;
+    var bidx=wy*WSIZE+wx;
+    var bn=WV[bidx];
+    if(bn>=0&&bn<TP.length){
+      tg.beginFil(TC[TP[bn]]);
+      tg.drawRect(x*ts-mapCamX%ts,y*ts-mapCamY%ts,ts,ts);
+      tg.endFil();
+    }
+  }
+  tileMapContainer.addChild(tg);
+}
+document.addEventListener('keydown',function(e){
+  if(!tileMapContainer||!tileMapContainer.visible) return;
+  var spd=8;
+  if(e.key==='ArrowLeft'||e.key==='a') mapCamX=Math.max(0,mapCamX-spd);
+  if(e.key==='ArrowRight'||e.key==='d') mapCamX=Math.min(WSIZE*4-1024,mapCamX+spd);
+  if(e.key==='ArrowUp'||e.key==='w') mapCamY=Math.max(0,mapCamY-spd);
+  if(e.key==='ArrowDown'||e.key==='s') mapCamY=Math.min(WSIZE*4-768,mapCamY+spd);
+});
+
+// ---- Pet Species Definitions ----
 const PET_SPECIES = {
 flr:{nm:"FlareHound",ic:"\uD83D\uDD25",bc:0xFF6B3B,ac:0xFFF3E0,
  bs:{hp:42,atk:7,def:4,spd:6},
@@ -824,33 +890,182 @@ vwk:{nm:"VoidWaker",ic:"\uD83C\uDF3F",bc:0x1a1a2e,ac:0x533483,
  ev:{10:{nm:"WarpWaker",atk:11,def:8,spd:11,hp:86,clr:0x311B92},
   25:{nm:"DimnsinWaker",atk:18,def:14,spd:16,hp:166,clr:0x4527A0},
   50:{nm:"ChaosWaker",atk:27,def:22,spd:22,hp:300,clr:0x7C4DFF}},
- dc:"Dimnsional pet. Bends reality!"}};// TERRIN (20 biomes)
-var TP=['deep','ocen','shllow','river','ice','baech','desert','savna','gras','stepe','forst','taiga','jngle','swamp','tunra','snow','rock','pek','lva','ash'];
-var TC={deep:0x2E45C,ocen:0x3D6478,shllow:0x6E9A8,river:0x5A8C0,ice:0xC6D6D8,baech:0xD9C89A,desert:0xDC088,savna:0xCB063,gras:0x7C05A,stepe:0xB2B080,forst:0x4E8C42,taiga:0x4175C,jngle:0x3C8442,swamp:0xE7284,tunra:0xAB098,snow:0xE4EDC,rock:0x8A8173,pek:0xA9E90,lva:0xD4602A,ash:0x66158};
-var WSEED=Math.floor(Math.random()*999999);
-var WN=new SR(WSEED);
-var WM=[],WV=[];
-var WSIZE=200;
-function genWorld(){
-  for(var y=0;y<WSIZE;y++)for(var x=0;x<WSIZE;x++){
-    var nx=x/WSIZE,ny=y/WSIZE;
-    var e=WN.fbm(nx*6,ny*6,5);
-    var t=WN.fbm(nx*4,ny*4,3)-0.5;
-    var r=WN.fbm(nx*5,ny*5,4);
-    var lnd=e>0.38?1:0;
-    var idx=y*WSIZE+x;
-    WM[idx]=e;WV[idx]=0;
-    if(!lnd){WV[idx]=e>0.25?2:1;}
-    else{
-      if(e<0.42)WV[idx]=5;
-      else if(e>0.85)WV[idx]=17;
-      else if(e>0.78)WV[idx]=t<-0.1?16:15;
-      else if(t<-0.3){WV[idx]=r<0.3?11:12;}
-      else if(t>0.4){WV[idx]=r<0.2?7:r<0.45?8:9;}
-      else{WV[idx]=r<0.25?6:r<0.5?7:r<0.7?8:10;}
-    }
-  }
+ dc:"Dimnsional pet. Bends reality!"}};
+
+var PET_DRAW={flr:drawFlareHound,glw:drawGlacalWisp,thc:drawThundrClaw,shm:drawShadoMoph,trg:drawTeraGolem,vnq:drawVenomQuil,asw:drawAstalWyrm,blk:drawBlomKnight,aqr:drawAquaRider,emw:drawEmberWing,crm:drawCrystalMoth,vwk:drawVoidWaker};
+function drawPet(g,x,y,scale,petData){
+  if(!petData) return;
+  var dfn=PET_DRAW[petData.species];
+  if(dfn){dfn(g,scale,GS.tick||0,petData);}
+  else{drawDefaltPet(g,scale,GS.tick||0,petData);}
 }
+function drawFlareHound(g,s,f,d){
+  var bc=d.bc||0xFF6B3B,ac=d.ac||0xFFF3E0,yw=0xF4C542;
+  g.beginFil(bc);
+  g.drawRect(3*s,4*s,10*s,8*s);g.drawRect(2*s,1*s,6*s,4*s);
+  g.drawRect(2*s,5*s,1*s,3*s);g.drawRect(8*s,5*s,1*s,3*s);
+  g.drawRect(4*s,12*s,2*s,3*s);g.drawRect(10*s,12*s,2*s,3*s);
+  g.endFil();
+  g.beginFil(yw);g.drawRect(1*s,0,3*s,3*s);g.drawRect(7*s,0,3*s,3*s);
+  var tf=f%2;g.drawRect(14*s+tf*2*s,5*s,3*s,5*s);g.endFil();
+  g.beginFil(ac);g.drawRect(5*s,6*s,5*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(4*s,2*s,2*s,2*s);g.drawRect(8*s,2*s,2*s,2*s);g.endFil();
+  g.beginFil(0xe84560);g.drawRect(18*s+tf*2*s,3*s,2*s,3*s);g.endFil();
+  g.beginFil(yw);g.drawRect(19*s+((f+1)%2)*2*s,1*s,2*s,2*s);g.endFil();
+}
+function drawGlacalWisp(g,s,f,d){
+  var bc=d.bc||0x7EC8E3,ac=d.ac||0xFFFFFF;
+  g.beginFil(bc);g.drawRect(4*s,4*s,8*s,9*s);g.drawRect(3*s,1*s,4*s,4*s);
+  g.drawRect(7*s,2*s,4*s,4*s);g.drawRect(3*s,13*s,3*s,3*s);
+  g.drawRect(8*s,13*s,3*s,3*s);g.drawRect(0,8*s,3*s,3*s);
+  g.drawRect(13*s,7*s,2*s,2*s);g.drawRect(14*s,10*s,2*s,2*s);
+  g.endFil();
+  g.beginFil(ac);g.drawRect(4*s,2*s,2*s,1*s);g.drawRect(8*s,3*s,2*s,1*s);
+  g.drawRect(2*s,5*s,1*s,2*s);g.drawRect(9*s,6*s,1*s,2*s);
+  g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(4*s,5*s,1*s,2*s);g.drawRect(8*s,4*s,1*s,2*s);g.endFil();
+  var b=f%3;g.alpha=0.6;g.beginFil(0xE0F7FA);
+  g.drawRect((6+b)*s,15*s,2*s,2*s);g.drawRect((4-b)*s,14*s,1*s,2*s);
+  g.drawRect((10+b)*s,14*s,1*s,2*s);g.endFil();g.alpha=1;
+}
+function drawThundrClaw(g,s,f,d){
+  var bc=d.bc||0xF4C542,ac=d.ac||0x533483;
+  g.beginFil(bc);g.drawRect(2*s,3*s,8*s,7*s);g.drawRect(4*s,0,6*s,4*s);
+  g.drawRect(0,5*s,3*s,2*s);g.drawRect(9*s,4*s,3*s,2*s);
+  g.drawRect(4*s,10*s,2*s,4*s);g.drawRect(8*s,10*s,2*s,4*s);
+  g.endFil();
+  g.beginFil(ac);g.drawRect(3*s,1*s,2*s,3*s);g.drawRect(7*s,2*s,2*s,2*s);
+  g.drawRect(1*s,6*s,1*s,1*s);g.drawRect(10*s,5*s,1*s,1*s);
+  g.endFil();
+  g.beginFil(0xFFD600);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(5*s,1*s,1*s,1*s);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+  var tf=f%3;
+  g.beginFil(0xFFFF00);g.drawRect((0-tf)*s,7*s,1*s,2*s);g.drawRect((11+tf)*s,6*s,1*s,2*s);g.endFil();
+}
+function drawShadoMoph(g,s,f,d){
+  var bc=d.bc||0x1a1a2e,ac=d.ac||0x9b59b6;
+  g.beginFil(bc);g.drawRect(3*s,3*s,10*s,8*s);g.drawRect(5*s,0,6*s,5*s);
+  g.drawRect(4*s,11*s,3*s,4*s);g.drawRect(9*s,11*s,3*s,4*s);
+  g.endFil();
+  g.beginFil(ac);g.drawRect(6*s,2*s,4*s,2*s);g.drawRect(2*s,5*s,2*s,4*s);
+  g.drawRect(5*s,6*s,6*s,2*s);g.drawRect(12*s,5*s,2*s,4*s);
+  g.endFil();
+  g.beginFil(0x4A148C);g.drawRect(7*s,1*s,2*s,1*s);g.endFil();
+  g.beginFil(0xECF0F1);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(10*s,3*s,1*s,1*s);g.endFil();
+  var tf=f%4;g.alpha=tf<2?0.3:0.7;
+  g.beginFil(ac);g.drawRect((1+tf)*s,0,2*s,2*s);g.drawRect((15-tf)*s,9*s,2*s,2*s);g.endFil();g.alpha=1;
+}
+function drawTeraGolem(g,s,f,d){
+  var bc=d.bc||0x8A8173,ac=d.ac||0x6B5B4F;
+  g.beginFil(bc);g.drawRect(3*s,1*s,10*s,10*s);g.drawRect(2*s,0,4*s,3*s);
+  g.drawRect(8*s,0,4*s,3*s);g.drawRect(1*s,3*s,2*s,5*s);
+  g.drawRect(13*s,3*s,2*s,5*s);g.drawRect(4*s,11*s,3*s,5*s);
+  g.drawRect(9*s,11*s,3*s,5*s);g.endFil();
+  g.beginFil(ac);g.drawRect(2*s,1*s,2*s,1*s);g.drawRect(10*s,1*s,2*s,1*s);
+  g.drawRect(5*s,4*s,6*s,4*s);g.drawRect(2*s,4*s,2*s,2*s);
+  g.drawRect(12*s,4*s,2*s,2*s);g.endFil();
+  g.beginFil(0xB0BEC5);g.drawRect(3*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(6*s,3*s,2*s,2*s);g.drawRect(10*s,3*s,2*s,2*s);g.endFil();
+}
+function drawVenomQuil(g,s,f,d){
+  var bc=d.bc||0x9b59b6,ac=d.ac||0x2ecc71;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(3*s,0,5*s,5*s);
+  g.drawRect(7*s,1*s,5*s,3*s);g.endFil();
+  g.beginFil(ac);g.drawRect(0,6*s,3*s,2*s);g.drawRect(2*s,4*s,2*s,2*s);
+  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(13*s,7*s,2*s,2*s);
+  g.drawRect(1*s,10*s,2*s,3*s);g.drawRect(12*s,9*s,2*s,3*s);
+  g.drawRect(1*s,2*s,2*s,2*s);g.drawRect(14*s,1*s,2*s,2*s);
+  g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(5*s,2*s,1*s,2*s);g.drawRect(10*s,1*s,1*s,2*s);g.endFil();
+  g.beginFil(0x76FF03);g.drawRect(4*s,4*s,1*s,1*s);g.drawRect(10*s,6*s,1*s,1*s);g.endFil();
+}
+function drawAstalWyrm(g,s,f,d){
+  var bc=d.bc||0x533483,ac=d.ac||0xf4c542;
+  g.beginFil(bc);g.drawRect(0,4*s,12*s,5*s);g.drawRect(4*s,0,6*s,6*s);
+  g.drawRect(12*s,4*s,4*s,4*s);g.drawRect(2*s,9*s,4*s,3*s);
+  g.drawRect(6*s,8*s,4*s,2*s);g.endFil();
+  g.beginFil(ac);g.drawRect(5*s,1*s,4*s,2*s);g.drawRect(1*s,5*s,2*s,2*s);
+  g.drawRect(14*s,5*s,2*s,1*s);g.drawRect(16*s,3*s,2*s,3*s);
+  g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(6*s,2*s,2*s,1*s);g.endFil();
+  g.beginFil(0xE040FB);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(13*s,5*s,1*s,2*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
+}
+function drawBlomKnigt(g,s,f,d){
+  var bc=d.bc||0x2ecc71,ac=d.ac||0xe67e22;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(2*s,5*s,2*s,4*s);g.drawRect(12*s,5*s,2*s,4*s);
+  g.drawRect(5*s,10*s,2*s,4*s);g.drawRect(9*s,10*s,2*s,4*s);
+  g.endFil();
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(4*s,5*s,1*s,2*s);
+  g.drawRect(12*s,5*s,1*s,2*s);g.drawRect(5*s,3*s,6*s,1*s);
+  g.drawRect(7*s,7*s,3*s,3*s);g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+}
+function drawAquaRider(g,s,f,d){
+  var bc=d.bc||0x3498db,ac=d.ac||0xecf0f1;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,6*s);g.drawRect(3*s,0,5*s,5*s);
+  g.drawRect(7*s,0,5*s,3*s);g.drawRect(1*s,5*s,3*s,2*s);
+  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(3*s,9*s,4*s,3*s);
+  g.drawRect(9*s,9*s,4*s,3*s);g.endFil();
+  g.beginFil(ac);g.drawRect(4*s,1*s,3*s,2*s);g.drawRect(8*s,1*s,3*s,2*s);
+  g.drawRect(5*s,4*s,6*s,3*s);g.drawRect(5*s,8*s,6*s,1*s);
+  g.endFil();
+  g.beginFil(0xE1F5FE);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+  var wv=f%3;g.alpha=0.5;
+  g.beginFil(ac);g.drawRect(0,(8+wv)*s,2*s,2*s);g.drawRect(14*s,(8-wv)*s,2*s,2*s);g.endFil();g.alpha=1;
+}
+function drawEmberWing(g,s,f,d){
+  var bc=d.bc||0xe67e22,ac=d.ac||0xf4c542;
+  g.beginFil(bc);g.drawRect(5*s,4*s,6*s,6*s);g.drawRect(6*s,0,4*s,6*s);
+  g.drawRect(4*s,10*s,3*s,3*s);g.drawRect(9*s,10*s,3*s,3*s);
+  g.endFil();
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(1*s,3*s,4*s,1*s);
+  g.drawRect(11*s,4*s,4*s,1*s);g.drawRect(2*s,2*s,3*s,1*s);
+  g.drawRect(12*s,3*s,3*s,1*s);g.endFil();
+  g.beginFil(0xFFD600);g.drawRect(3*s,0,2*s,2*s);g.drawRect(13*s,1*s,2*s,2*s);g.endFil();
+  g.beginFil(0xFF3D00);g.drawRect(0,5*s,2*s,3*s);g.drawRect(15*s,4*s,2*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFil();
+  var tf=f%2;
+  g.beginFil(0xe84560);g.drawRect((4+tf)*s,14*s,2*s,2*s);g.drawRect((10-tf)*s,13*s,2*s,2*s);g.endFil();
+}
+function drawCrystalMoth(g,s,f,d){
+  var bc=d.bc||0x00BCD4,ac=d.ac||0xEC407A;
+  g.beginFil(bc);g.drawRect(4*s,5*s,8*s,5*s);g.drawRect(5*s,2*s,6*s,5*s);
+  g.drawRect(3*s,10*s,4*s,3*s);g.drawRect(9*s,10*s,4*s,3*s);
+  g.endFil();
+  var wf=f%4;g.beginFil(ac,0.6);
+  g.drawRect(0,wf*s,3*s,4*s);g.drawRect(13*s,(3-wf)*s,3*s,4*s);
+  g.drawRect(wf*s,0,3*s,2*s);g.drawRect((13-wf)*s,0,3*s,2*s);
+  g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(6*s,3*s,4*s,1*s);g.drawRect(5*s,6*s,2*s,1*s);g.drawRect(9*s,6*s,2*s,1*s);g.endFil();
+  g.beginFil(0x4DD0E1);g.drawRect(7*s,4*s,2*s,2*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,5*s,1*s,1*s);g.endFil();
+}
+function drawVoidWaker(g,s,f,d){
+  var bc=d.bc||0x1a1a2e,ac=d.ac||0x533483;
+  g.beginFil(bc);g.drawRect(5*s,3*s,6*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(3*s,10*s,3*s,3*s);g.drawRect(10*s,10*s,3*s,3*s);
+  g.drawRect(1*s,4*s,4*s,2*s);g.drawRect(13*s,4*s,3*s,2*s);
+  g.endFil();
+  var vf=f%4;
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(3*s,6*s,2*s,2*s);
+  g.drawRect(12*s,(5+vf)*s,2*s,2*s);g.endFil();
+  g.beginFil(0x7C4DFF);g.drawRect(0,7*s,2*s,3*s);g.drawRect(1*s,1*s,2*s,2*s);
+  g.drawRect(14*s,1*s,2*s,2*s);g.drawRect(15*s,8*s,1*s,4*s);g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x311B92);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+}
+function drawDefaltPet(g,s,f,d){
+  var bc=d.bc||0xf4c542;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(2*s,11*s,3*s,3*s);g.drawRect(11*s,11*s,3*s,3*s);g.endFil();
+  g.beginFil(0xecf0f1);g.drawRect(7*s,2*s,2*s,2*s);g.drawRect(5*s,5*s,6*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,3*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFil();
+}
+
 // ---- Pet Creation ----
 function createPet(species, name) {
   const spec = PET_SPECIES[species];
@@ -873,8 +1088,8 @@ function createPet(species, name) {
     bond: 0,
     breedCount: 0,
     evolutionStage: 0,
-    color: spec.bc,
-    accentColor: spec.ac,
+    bc: spec.bc,
+    ac: spec.ac,
     shiny: Math.random() < 0.01,
     createdDay: GS.day,
     equips: {},
@@ -883,7 +1098,7 @@ function createPet(species, name) {
   };
   if (pet.shiny) {
     pet.bc = 0xf4c542;
-    pet.ac = 0xecf0f1;
+    pet.accntColor = 0xecf0f1;
     pet.name = '\u2728 ' + pet.name + ' \u2728';
     pet.atk += 2;
     pet.def += 2;
@@ -1016,7 +1231,7 @@ function useItem(itemKey, pet) {
   if (itemKey === 'mysteryEge') {
     const species = Object.keys(PET_SPECIES)[Math.floor(Math.random() * Object.keys(PET_SPECIES).length)];
     const newPet = createPet(species);
-    notify('\uD83E\uDD5A Hatched a ' + PET_SPECIES[species].nm + '!', 5);
+    notify('\uD83E\uDD5A Hatched a ' + PET_SPECIES[species].name + '!', 5);
     SFX.evolve();
     return true;
   }
@@ -2209,214 +2424,17 @@ function initPixi() {
 }
 
 // ---- Procedural Pet Drawing ----
-var PET_DRAW={flr:drawFlareHound,glw:drawGlacalWisp,thc:drawThundrClaw,shm:drawShadoMoph,trg:drawTeraGolem,vnq:drawVenomQuil,asw:drawAstalWyrm,blk:drawBlomKnight,aqr:drawAquaRider,emw:drawEmberWing,crm:drawCrystalMoth,vwk:drawVoidWaker};
-function drawPet(g,x,y,scale,petData){
-  if(!petData) return;
-  var dfn=PET_DRAW[petData.species];
-  if(dfn){dfn(g,scale,GS.tick||0,petData);}
-  else{drawDefaltPet(g,scale,GS.tick||0,petData);}
-}
-function drawFlareHound(g,s,f,d){
-  var bc=d.bc||0xFF6B3B,ac=d.ac||0xFFF3E0,yw=0xF4C542;
-  g.beginFil(bc);
-  g.drawRect(3*s,4*s,10*s,8*s);g.drawRect(2*s,1*s,6*s,4*s);
-  g.drawRect(2*s,5*s,1*s,3*s);g.drawRect(8*s,5*s,1*s,3*s);
-  g.drawRect(4*s,12*s,2*s,3*s);g.drawRect(10*s,12*s,2*s,3*s);
-  g.endFil();
-  g.beginFil(yw);g.drawRect(1*s,0,3*s,3*s);g.drawRect(7*s,0,3*s,3*s);
-  var tf=f%2;g.drawRect(14*s+tf*2*s,5*s,3*s,5*s);g.endFil();
-  g.beginFil(ac);g.drawRect(5*s,6*s,5*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(4*s,2*s,2*s,2*s);g.drawRect(8*s,2*s,2*s,2*s);g.endFil();
-  g.beginFil(0xe84560);g.drawRect(18*s+tf*2*s,3*s,2*s,3*s);g.endFil();
-  g.beginFil(yw);g.drawRect(19*s+((f+1)%2)*2*s,1*s,2*s,2*s);g.endFil();
-}
-function drawGlacalWisp(g,s,f,d){
-  var bc=d.bc||0x7EC8E3,ac=d.ac||0xFFFFFF;
-  g.beginFil(bc);g.drawRect(4*s,4*s,8*s,9*s);g.drawRect(3*s,1*s,4*s,4*s);
-  g.drawRect(7*s,2*s,4*s,4*s);g.drawRect(3*s,13*s,3*s,3*s);
-  g.drawRect(8*s,13*s,3*s,3*s);g.drawRect(0,8*s,3*s,3*s);
-  g.drawRect(13*s,7*s,2*s,2*s);g.drawRect(14*s,10*s,2*s,2*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(4*s,2*s,2*s,1*s);g.drawRect(8*s,3*s,2*s,1*s);
-  g.drawRect(2*s,5*s,1*s,2*s);g.drawRect(9*s,6*s,1*s,2*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(4*s,5*s,1*s,2*s);g.drawRect(8*s,4*s,1*s,2*s);g.endFil();
-  var b=f%3;g.alpha=0.6;g.beginFil(0xE0F7FA);
-  g.drawRect((6+b)*s,15*s,2*s,2*s);g.drawRect((4-b)*s,14*s,1*s,2*s);
-  g.drawRect((10+b)*s,14*s,1*s,2*s);g.endFil();g.alpha=1;
-}
-function drawThundrClaw(g,s,f,d){
-  var bc=d.bc||0xF4C542,ac=d.ac||0x533483;
-  g.beginFil(bc);g.drawRect(2*s,3*s,8*s,7*s);g.drawRect(4*s,0,6*s,4*s);
-  g.drawRect(0,5*s,3*s,2*s);g.drawRect(9*s,4*s,3*s,2*s);
-  g.drawRect(4*s,10*s,2*s,4*s);g.drawRect(8*s,10*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(3*s,1*s,2*s,3*s);g.drawRect(7*s,2*s,2*s,2*s);
-  g.drawRect(1*s,6*s,1*s,1*s);g.drawRect(10*s,5*s,1*s,1*s);
-  g.endFil();
-  g.beginFil(0xFFD600);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(5*s,1*s,1*s,1*s);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
-  var tf=f%3;
-  g.beginFil(0xFFFF00);g.drawRect((0-tf)*s,7*s,1*s,2*s);g.drawRect((11+tf)*s,6*s,1*s,2*s);g.endFil();
-}
-function drawShadoMoph(g,s,f,d){
-  var bc=d.bc||0x1a1a2e,ac=d.ac||0x9b59b6;
-  g.beginFil(bc);g.drawRect(3*s,3*s,10*s,8*s);g.drawRect(5*s,0,6*s,5*s);
-  g.drawRect(4*s,11*s,3*s,4*s);g.drawRect(9*s,11*s,3*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(6*s,2*s,4*s,2*s);g.drawRect(2*s,5*s,2*s,4*s);
-  g.drawRect(5*s,6*s,6*s,2*s);g.drawRect(12*s,5*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(0x4A148C);g.drawRect(7*s,1*s,2*s,1*s);g.endFil();
-  g.beginFil(0xECF0F1);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(10*s,3*s,1*s,1*s);g.endFil();
-  var tf=f%4;g.alpha=tf<2?0.3:0.7;
-  g.beginFil(ac);g.drawRect((1+tf)*s,0,2*s,2*s);g.drawRect((15-tf)*s,9*s,2*s,2*s);g.endFil();g.alpha=1;
-}
-function drawTeraGolem(g,s,f,d){
-  var bc=d.bc||0x8A8173,ac=d.ac||0x6B5B4F;
-  g.beginFil(bc);g.drawRect(3*s,1*s,10*s,10*s);g.drawRect(2*s,0,4*s,3*s);
-  g.drawRect(8*s,0,4*s,3*s);g.drawRect(1*s,3*s,2*s,5*s);
-  g.drawRect(13*s,3*s,2*s,5*s);g.drawRect(4*s,11*s,3*s,5*s);
-  g.drawRect(9*s,11*s,3*s,5*s);g.endFil();
-  g.beginFil(ac);g.drawRect(2*s,1*s,2*s,1*s);g.drawRect(10*s,1*s,2*s,1*s);
-  g.drawRect(5*s,4*s,6*s,4*s);g.drawRect(2*s,4*s,2*s,2*s);
-  g.drawRect(12*s,4*s,2*s,2*s);g.endFil();
-  g.beginFil(0xB0BEC5);g.drawRect(3*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(6*s,3*s,2*s,2*s);g.drawRect(10*s,3*s,2*s,2*s);g.endFil();
-}
-function drawVenomQuil(g,s,f,d){
-  var bc=d.bc||0x9b59b6,ac=d.ac||0x2ecc71;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(3*s,0,5*s,5*s);
-  g.drawRect(7*s,1*s,5*s,3*s);g.endFil();
-  g.beginFil(ac);g.drawRect(0,6*s,3*s,2*s);g.drawRect(2*s,4*s,2*s,2*s);
-  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(13*s,7*s,2*s,2*s);
-  g.drawRect(1*s,10*s,2*s,3*s);g.drawRect(12*s,9*s,2*s,3*s);
-  g.drawRect(1*s,2*s,2*s,2*s);g.drawRect(14*s,1*s,2*s,2*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(5*s,2*s,1*s,2*s);g.drawRect(10*s,1*s,1*s,2*s);g.endFil();
-  g.beginFil(0x76FF03);g.drawRect(4*s,4*s,1*s,1*s);g.drawRect(10*s,6*s,1*s,1*s);g.endFil();
-}
-function drawAstalWyrm(g,s,f,d){
-  var bc=d.bc||0x533483,ac=d.ac||0xf4c542;
-  g.beginFil(bc);g.drawRect(0,4*s,12*s,5*s);g.drawRect(4*s,0,6*s,6*s);
-  g.drawRect(12*s,4*s,4*s,4*s);g.drawRect(2*s,9*s,4*s,3*s);
-  g.drawRect(6*s,8*s,4*s,2*s);g.endFil();
-  g.beginFil(ac);g.drawRect(5*s,1*s,4*s,2*s);g.drawRect(1*s,5*s,2*s,2*s);
-  g.drawRect(14*s,5*s,2*s,1*s);g.drawRect(16*s,3*s,2*s,3*s);
-  g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(6*s,2*s,2*s,1*s);g.endFil();
-  g.beginFil(0xE040FB);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(13*s,5*s,1*s,2*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
-}
-function drawBlomKnight(g,s,f,d){
-  var bc=d.bc||0x2ecc71,ac=d.ac||0xe67e22;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,7*s);g.drawRect(6*s,0,4*s,5*s);
-  g.drawRect(2*s,5*s,2*s,4*s);g.drawRect(12*s,5*s,2*s,4*s);
-  g.drawRect(5*s,10*s,2*s,4*s);g.drawRect(9*s,10*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(4*s,5*s,1*s,2*s);
-  g.drawRect(12*s,5*s,1*s,2*s);g.drawRect(5*s,3*s,6*s,1*s);
-  g.drawRect(7*s,7*s,3*s,3*s);g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
-}
-function drawAquaRider(g,s,f,d){
-  var bc=d.bc||0x3498db,ac=d.ac||0xecf0f1;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,6*s);g.drawRect(3*s,0,5*s,5*s);
-  g.drawRect(7*s,0,5*s,3*s);g.drawRect(1*s,5*s,3*s,2*s);
-  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(3*s,9*s,4*s,3*s);
-  g.drawRect(9*s,9*s,4*s,3*s);g.endFil();
-  g.beginFil(ac);g.drawRect(4*s,1*s,3*s,2*s);g.drawRect(8*s,1*s,3*s,2*s);
-  g.drawRect(5*s,4*s,6*s,3*s);g.drawRect(5*s,8*s,6*s,1*s);
-  g.endFil();
-  g.beginFil(0xE1F5FE);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
-  var wv=f%3;g.alpha=0.5;
-  g.beginFil(ac);g.drawRect(0,(8+wv)*s,2*s,2*s);g.drawRect(14*s,(8-wv)*s,2*s,2*s);g.endFil();g.alpha=1;
-}
-function drawEmberWing(g,s,f,d){
-  var bc=d.bc||0xe67e22,ac=d.ac||0xf4c542;
-  g.beginFil(bc);g.drawRect(5*s,4*s,6*s,6*s);g.drawRect(6*s,0,4*s,6*s);
-  g.drawRect(4*s,10*s,3*s,3*s);g.drawRect(9*s,10*s,3*s,3*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(1*s,3*s,4*s,1*s);
-  g.drawRect(11*s,4*s,4*s,1*s);g.drawRect(2*s,2*s,3*s,1*s);
-  g.drawRect(12*s,3*s,3*s,1*s);g.endFil();
-  g.beginFil(0xFFD600);g.drawRect(3*s,0,2*s,2*s);g.drawRect(13*s,1*s,2*s,2*s);g.endFil();
-  g.beginFil(0xFF3D00);g.drawRect(0,5*s,2*s,3*s);g.drawRect(15*s,4*s,2*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFil();
-  var tf=f%2;
-  g.beginFil(0xe84560);g.drawRect((4+tf)*s,14*s,2*s,2*s);g.drawRect((10-tf)*s,13*s,2*s,2*s);g.endFil();
-}
-function drawCrystalMoth(g,s,f,d){
-  var bc=d.bc||0x00BCD4,ac=d.ac||0xEC407A;
-  g.beginFil(bc);g.drawRect(4*s,5*s,8*s,5*s);g.drawRect(5*s,2*s,6*s,5*s);
-  g.drawRect(3*s,10*s,4*s,3*s);g.drawRect(9*s,10*s,4*s,3*s);
-  g.endFil();
-  var wf=f%4;g.beginFil(ac,0.6);
-  g.drawRect(0,wf*s,3*s,4*s);g.drawRect(13*s,(3-wf)*s,3*s,4*s);
-  g.drawRect(wf*s,0,3*s,2*s);g.drawRect((13-wf)*s,0,3*s,2*s);
-  g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(6*s,3*s,4*s,1*s);g.drawRect(5*s,6*s,2*s,1*s);g.drawRect(9*s,6*s,2*s,1*s);g.endFil();
-  g.beginFil(0x4DD0E1);g.drawRect(7*s,4*s,2*s,2*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,5*s,1*s,1*s);g.endFil();
-}
-function drawVoidWaker(g,s,f,d){
-  var bc=d.bc||0x1a1a2e,ac=d.ac||0x533483;
-  g.beginFil(bc);g.drawRect(5*s,3*s,6*s,7*s);g.drawRect(6*s,0,4*s,5*s);
-  g.drawRect(3*s,10*s,3*s,3*s);g.drawRect(10*s,10*s,3*s,3*s);
-  g.drawRect(1*s,4*s,4*s,2*s);g.drawRect(13*s,4*s,3*s,2*s);
-  g.endFil();
-  var vf=f%4;
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(3*s,6*s,2*s,2*s);
-  g.drawRect(12*s,(5+vf)*s,2*s,2*s);g.endFil();
-  g.beginFil(0x7C4DFF);g.drawRect(0,7*s,2*s,3*s);g.drawRect(1*s,1*s,2*s,2*s);
-  g.drawRect(14*s,1*s,2*s,2*s);g.drawRect(15*s,8*s,1*s,4*s);g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x311B92);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
-}
-function drawDefaltPet(g,s,f,d){
-  var bc=d.bc||0xf4c542;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(6*s,0,4*s,5*s);
-  g.drawRect(2*s,11*s,3*s,3*s);g.drawRect(11*s,11*s,3*s,3*s);g.endFil();
-  g.beginFil(0xecf0f1);g.drawRect(7*s,2*s,2*s,2*s);g.drawRect(5*s,5*s,6*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,3*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFil();
-}// PIXI TILEMP RENDERER
-var tileMapContainer=null;
-var mapCamX=0,mapCamY=0;
-function initTileMap(){
-  tileMapContainer=new PIXI.Container();
-  tileMapContainer.visible=false;
-  renderStage.addChild(tileMapContainer);
-}
-function renderTileMap(){
-  if(!tileMapContainer||!tileMapContainer.visible) return;
-  if(typeof WN=="undefined"||WV.length===0) genWorld();
-  tileMapContainer.removeChildren();
-  var tg=new PIXI.Graphics();
-  var ts=4,vw=Math.ceil(1024/ts)+2,vh=Math.ceil(768/ts)+2;
-  var ox=Math.max(0,Math.floor(mapCamX/ts)),oy=Math.max(0,Math.floor(mapCamY/ts));
-  for(var y=0;y<vh;y++)for(var x=0;x<vw;x++){
-    var wx=ox+x,wy=oy+y;
-    if(wx>=WSIZE||wy>=WSIZE) continue;
-    var bidx=wy*WSIZE+wx;
-    var bn=WV[bidx];
-    if(bn>=0&&bn<TP.length){
-      tg.beginFil(TC[TP[bn]]);
-      tg.drawRect(x*ts-mapCamX%ts,y*ts-mapCamY%ts,ts,ts);
-      tg.endFil();
-    }
+function drawPet(g, x, y, scale, petData) {
+  if (!petData) return;
+  const spec = PET_SPECIES[petData.species];
+  if (spec && spec.draw) {
+    spec.draw(g, x, y, scale, petData);
+  } else {
+    drawDefaultPet(g, x, y, scale, petData);
   }
-  tileMapContainer.addChild(tg);
 }
-document.addEventListener('keydown',function(e){
-  if(!tileMapContainer||!tileMapContainer.visible) return;
-  var spd=8;
-  if(e.key==='ArrowLeft'||e.key==='a') mapCamX=Math.max(0,mapCamX-spd);
-  if(e.key==='ArrowRight'||e.key==='d') mapCamX=Math.min(WSIZE*4-1024,mapCamX+spd);
-  if(e.key==='ArrowUp'||e.key==='w') mapCamY=Math.max(0,mapCamY-spd);
-  if(e.key==='ArrowDown'||e.key==='s') mapCamY=Math.min(WSIZE*4-768,mapCamY+spd);
-});
+
+
 // ---- Render Loop ----
 function renderFrame() {
   if (!app || !renderStage) return;
