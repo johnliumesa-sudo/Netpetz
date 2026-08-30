@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -326,6 +327,95 @@ input, select {
   color: var(--white);
   font-size: 9px;
 }
+
+/* ---- professional pass: one visual language for every control ---- */
+#action-bar {
+  display: grid !important;
+  grid-template-columns: repeat(4, 92px);
+  gap: 6px;
+  padding: 8px;
+  background: rgba(26,26,46,0.92);
+  border: 1px solid var(--purple);
+  border-radius: 10px;
+  max-width: none;
+}
+#action-bar button, .btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--purple);
+  background: linear-gradient(180deg, #232345, #191932);
+  color: var(--white);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform .06s ease, border-color .12s ease, background .12s ease;
+}
+#action-bar button:hover, .btn:hover {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #2b2b55, #1f1f3e);
+}
+#action-bar button:active, .btn:active { transform: translateY(1px); }
+.btn.gold { border-color: var(--gold); color: var(--gold); }
+.btn.red { border-color: var(--red); color: var(--red); }
+.panel { border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+.panel h2 { letter-spacing: 1px; }
+
+/* ---- system pass 2: modals, tab rows, and in-panel controls ---- */
+.modal {
+  background: linear-gradient(180deg, #1e1e3a, #16162c);
+  border: 1px solid var(--purple);
+  border-radius: 12px;
+  padding: 16px 18px;
+  min-width: 340px;
+  max-width: 720px;
+  max-height: 640px;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,.6);
+}
+.modal h2 { color: var(--gold); font-size: 16px; letter-spacing: 1.5px;
+  border-bottom: 1px solid rgba(83,52,131,.6); padding-bottom: 6px; margin-bottom: 10px; }
+.modal h3 { color: var(--orange); font-size: 13px; margin: 12px 0 6px; }
+.tab-row {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px;
+  padding: 8px; background: rgba(15,15,30,.55);
+  border: 1px solid rgba(83,52,131,.45); border-radius: 8px;
+}
+.tab-row button {
+  flex: 0 1 auto; min-width: 96px;
+  font-size: 12px; padding: 7px 10px; border-radius: 6px;
+  border: 1px solid var(--purple); color: var(--white);
+  background: linear-gradient(180deg,#232345,#191932); cursor: pointer;
+  transition: border-color .12s, background .12s, transform .06s;
+}
+.tab-row button:hover { border-color: var(--gold); background: linear-gradient(180deg,#2b2b55,#1f1f3e); }
+.tab-row button:active { transform: translateY(1px); }
+.tab-row button:disabled { opacity: .45; cursor: default; }
+.modal .stat-bar, .modal progress { border-radius: 4px; overflow: hidden; }
+#action-bar { grid-template-columns: repeat(4, minmax(96px, 1fr)); max-width: 460px; }
+#action-bar button { font-size: 11.5px; }
+.modal::-webkit-scrollbar { width: 8px; }
+.modal::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 4px; }
+
+#side-tabs { position: absolute; left: 4px; top: 120px; z-index: 25;
+  display: flex; flex-direction: column; gap: 6px; }
+#side-tabs button { width: 46px; height: 46px; font-size: 20px; border-radius: 0 10px 10px 0;
+  border: 1px solid var(--purple); border-left: none;
+  background: linear-gradient(180deg,#232345,#191932); cursor: pointer; }
+#side-tabs button:hover { border-color: var(--gold); }
+
+#lobby-screen { position: absolute; inset: 0; z-index: 90;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; background: radial-gradient(ellipse at 50% 30%, #232345 0%, #12122a 70%);
+}
+#lobby-screen.hidden { display: none; }
+#lobby-screen h1 { color: var(--gold); letter-spacing: 3px; font-size: 28px; }
+#lobby-pet img { image-rendering: pixelated; }
+.lobby-buttons { display: flex; flex-direction: column; gap: 10px; width: 220px; }
+.lobby-buttons .btn { padding: 12px; font-size: 14px; }
+#side-tabs { z-index: 60; }
 </style>
 </head>
 <body>
@@ -363,7 +453,11 @@ input, select {
     </div>
   </div>
   <div id="side-panel"></div>
-  <div id="action-bar">
+  <div id="side-tabs">
+<button onclick="openPanel('pets')" title="Pets">🐾</button>
+<button onclick="openPanel('redeem')" title="Redeem">🎁</button>
+</div>
+<div id="action-bar">
     <button class="btn small" onclick="openPanel('feeds')">&#127860; Feed</button>
     <button class="btn small" onclick="openPanel('play')">&#127922; Play</button>
     <button class="btn small" onclick="openPanel('train')">&#127947; Train</button>
@@ -405,6 +499,19 @@ input, select {
 
 <div id="notification-area"></div>
 
+<div id="lobby-screen" class="hidden">
+  <h1>🐾 NetPetz</h1>
+  <div id="lobby-pet"></div>
+  <div class="lobby-buttons">
+    <button class="btn gold" onclick="enterWorld()">▶ Enter World</button>
+    <button class="btn" onclick="openPanel('pets')">🐾 Pets</button>
+    <button class="btn" onclick="openPanel('redeem')">🎁 Redeem</button>
+    <button class="btn" onclick="openPanel('world')">🗺 World Map</button>
+    <button class="btn" onclick="rerollWorld()">🎲 Reroll World</button>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-pets"><div class="modal" id="modal-pets-content"></div></div>
+<div class="modal-overlay" id="modal-redeem"><div class="modal" id="modal-redeem-content"></div></div>
 <div class="modal-overlay" id="modal-feed"><div class="modal" id="modal-feed-content"></div></div>
 <div class="modal-overlay" id="modal-play"><div class="modal" id="modal-play-content"></div></div>
 <div class="modal-overlay" id="modal-train"><div class="modal" id="modal-train-content"></div></div>
@@ -737,7 +844,7 @@ SR.prototype.at=function(x,y){var fx=Math.floor(x),fy=Math.floor(y),sx=s(x-fx),s
 SR.prototype.fbm=function(x,y,o,lc,g){o=o||5;lc=lc||2;g=g||0.5;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){v+=this.at(px,py)*a;m+=a;a*=g;px*=lc;py*=lc;}return v/m;};
 SR.prototype.rdg=function(x,y,o){o=o||4;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){var n=1-Math.abs(this.at(px,py)*2-1);v+=n*n*a;m+=a;a*=0.5;px*=2;py*=2;}return v/m;};
 // TERRIN (20 biomes)
-var TP=['deep','oce an','sh allow','river','ice','be ach','des ert','savna','gr ass','stepe','forst','taiga','jung le','swamp','tun ra','snow','rock','pe ak','la va','ash'];
+var TP=['deep','ocen','shllow','river','ice','baech','desert','savna','gras','stepe','forst','taiga','jngle','swamp','tunra','snow','rock','pek','lva','ash'];
 var TC={deep:0x2E4A5C,ocen:0x3D6478,shllow:0x6E9AA8,river:0x5A8CA0,ice:0xC6D6D8,baech:0xD9C89A,desert:0xD8C088,savna:0xC6B063,gras:0x7CB05A,stepe:0xB2B080,forst:0x4E8C42,taiga:0x41705C,jngle:0x3C8442,swamp:0x5E7248,tunra:0xACB098,snow:0xE4E4DC,rock:0x8A8173,pek:0xA69E90,lva:0xD4602A,ash:0x6A6158};
 var WSEED=Math.floor(Math.random()*999999);
 var WN=new SR(WSEED);
@@ -763,10 +870,18 @@ function genWorld(){
     }
   }
 }
+// autosave: progress survives closing the tab even with no backend
+setInterval(function(){ try { saveLocal(); } catch(e){} }, 45000);
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) { try { saveLocal(); } catch(e){} }
+});
+
 // PIXI TILEMP RENDERER
 var tileMapContainer=null;
 var mapCamX=0,mapCamY=0;
 function initTileMap(){
+  npzLoadTextures();
+  npzZoneBG();
   tileMapContainer=new PIXI.Container();
   tileMapContainer.visible=false;
   renderStage.addChild(tileMapContainer);
@@ -784,9 +899,16 @@ function renderTileMap(){
     var bidx=wy*WSIZE+wx;
     var bn=WV[bidx];
     if(bn>=0&&bn<TP.length){
-      tg.beginFil(TC[TP[bn]]);
+      var base=TC[TP[bn]];
+      // omniverse patches: 3 tonal bands from a coordinate hash
+      var h=((wx*40503)^(wy*24593))>>>0; h=(h^(h>>13))%3;
+      var m=h===0?0.92:h===1?1.0:1.08;
+      var r=Math.min(255,((base>>16)&255)*m)|0,
+          g2=Math.min(255,((base>>8)&255)*m)|0,
+          b2=Math.min(255,(base&255)*m)|0;
+      tg.beginFill((r<<16)|(g2<<8)|b2);
       tg.drawRect(x*ts-mapCamX%ts,y*ts-mapCamY%ts,ts,ts);
-      tg.endFil();
+      tg.endFill();
     }
   }
   tileMapContainer.addChild(tg);
@@ -892,178 +1014,443 @@ vwk:{nm:"VoidWaker",ic:"\uD83C\uDF3F",bc:0x1a1a2e,ac:0x533483,
   50:{nm:"ChaosWaker",atk:27,def:22,spd:22,hp:300,clr:0x7C4DFF}},
  dc:"Dimnsional pet. Bends reality!"}};
 
-var PET_DRAW={flr:drawFlareHound,glw:drawGlacalWisp,thc:drawThundrClaw,shm:drawShadoMoph,trg:drawTeraGolem,vnq:drawVenomQuil,asw:drawAstalWyrm,blk:drawBlomKnight,aqr:drawAquaRider,emw:drawEmberWing,crm:drawCrystalMoth,vwk:drawVoidWaker};
+
+// ---- Generated sprite assets (Omniverse pipeline) --------------------------
+// Pet art is drawn in light neutrals with dark outlines so PIXI tint gives
+// each species and strain its true colour; terrain tiles are the actual
+// Omniverse sheet frames used as playfield backdrops.
+var NPZ_ASSETS={"pets": {"flr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABfklEQVR4nO2XMXICMQxF/2ZSbZ2GHQpOQDoOQMEROMceZc/BESg4AF1yAgqGzDBJS0FjKmXAjGIZGYyyfh2sWVZ6kr0CCj2lacauacZOu+4l7WM9nuwBSE1wZA9Ay2vuB+AgK13XAQDatnUAsNt9VufrioFY/MwSXIZDmDcQFW0KNDsOUHogHev16uLzcPhWAcB2+31haDKZAuB7w7yBarFYOQCYz6d37QeqfT/zBGeA4EyYN/DbA48yweHvTpRxzhjxfwzk5qy2/+wVH/sGqOapB6S9oD1RU2HfAHfBN3E8OlXGR6N3zc9ZzBu4qnOuB7QG9vsfAPz+3t93odAC2m02mw/VH5EBgjIbIjShmTcgPon9DGrxeyBU6xzmDZQAciOut9BEdSu31j5h3kD0PCCdlKT30WLeQHTdpZoDqOb9+/XuHFDPxNJM3muCKwbqejCL+V56XYp5A08XQF0PZjF2ni6AWKLPgVS1G+Jw+FpK1vXPgE8qI9KM+5g3cALVJaGspIbd5gAAAABJRU5ErkJggg==", "glw": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABN0lEQVR4nO2YsQ6CMBBAq3FiIjGSyMQXyMYHMOjv8Cn8jg5+AJt+ARMmGBMmVp0u0RNC2ztCmt7bSOFs77XHoVKCIAiCz6y4A8bx4a1zX9PcWX57zRFkSchZwBmvqqvWc1mW/1zbGvHXAGReN+NTgBFTE/4ZGMt8FG0H72/bl1F8UxPOG9hQA4xlHo+bmtDFeQPaZ8B072PmOgvOG2BfQJKkKknS0fEsy//ewhScN0CuQrC34SzU9W1wHOB6cwNiAJirzk/hvAFZwNKwdaNceNeNygKWRr6Jl4ZsAGP7vxDGmypk3AtN7X3dXh8yDPHKslRKKVUUhdF8/DMwhm0VoeK8AeteCNN1zxNlImG4O39fSxXC4MxTM86FPwaAuTIPcfFZmMJ5A+SaHQT7I8dE+v5xsXnOeQMfFwl0ZmbidiwAAAAASUVORK5CYII=", "thc": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABd0lEQVR4nO2ZPXLCMBBGv2SoqGhSxBUnIB0HoAg34Bw+is/hG0DhA9AlJ6AiRRoqWqdahllm0erHOIv0So9s0Pek1XoMDExVLfqqWvRD3f8a+uD/wuRRP0QpHo/fLz7jXRQDWpqmAQDUdX3XBCV/Nf7uc80bUK3HGGIq0DWSMfMGbvZA23Y9AGw2q6R29vvOa/xyuQLgrlrmDVxmR8lzQk3Q2vdNnuMyYd7AJHXyLihRbka67sK+AUpaMpEaKeHQvWLegDiBtu36R1mJwbyBy0nsuxdS9TixmDdwU+td54LvCRta3/PrhTi8K43tbShRLdp35+c1QKTqKiW0a13CvIEygbEpExibMoGxUdfe1OdBbP0n8jFApOqJYpMn8jUQCiXPn5NtL6T+QkOJHQ5fAID5/AOAO9Gh353zMSAhJTydvn/6XA/l+Q3whGntE6fT7xoAZrO3bcwf4WbO55+d5j7zBtTvxFRVUq9hiWJASyoj2sQ55g38AbJcp4nELb9VAAAAAElFTkSuQmCC", "shm": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABUUlEQVR4nO2YMRKCMBBFv46VN5CKE2hnr4W1FefIUTiHlbWF9nZ6Aiu9gS0Wzo7DQiQJQQzZ14kEkv+WJQoIgiAETZLMiySZF32NH7sO/BdkAYPBtpbb1j4RvIHKAnwl0xV8fsEbGPEDuvTv92vl3DpM7bW9Ho0P3sBE98XtdgEA7PcnAIBSqpREU4Ln87H2+HK5/johnnie5wCA7XYFAEjTRen84RrgUBKErREdusRNiccAp6Y2C+BT+1TrXz4XQPVZsyVeA4QuOd6FdF3JNXlCDCilvIy37T5EvAaybF3q+647WHp/ZNm7S+12R6vrxGOAatX1jWsKmSWjTc/GcA3wXV/XyXPofrTn0jW74Rr4deI6+Dx4twvegPeUKaGmX2S+DAdvQBbQN511mrb/L5kiBqbT2cbHRJ7Px8FlXHwGfCXehKmR4A3IAvpGulDfvAAWlY7P9H5MbAAAAABJRU5ErkJggg==", "trg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABKUlEQVR4nO2YoRaCMBRAp8dEohgk8QXYCESD/g6fwu9oMC7Q5AtIGCwkqqZ5ZDL2Nrd53uHdNs4Gj929xwZjBEEQBEEQy2UF7Zgk2dNnICq6rpmNcR0qEF9sTAfU9dVHHF/k+QHUD70B5frSrXlfJnQzL+cEegPaHKiqatQuy3LUFjPWtrfJ8Wm6BwUiG9U9V4DeAL3AvzH+DqiArnXXkIFQX2YV6A1YvwDnDeO8cRmLFegNWOdAUWSMMfa2INqhQW/A2W5UzgdbI4vbjRqfiaF1/9fcECboTGxLqKq0PAPQvwWhQG8AXIVkRFVSnV1V1cN2nAr0BrxVoSjaHX3d+xP0BoxzQMxsHG/Pc/36/nGaug4dNwz3CySe5RrwDRmA4soIdMZl0Bt4AVbpXTNLT8NUAAAAAElFTkSuQmCC", "vnq": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABY0lEQVR4nO2YuxECIRRFr46RHbjRVqCZBRhoB9ZBKVuHHWhgAWZagZEGJkamGr0ZvYp8ZBlZONmyH9h34DE8oFAoBKWqxveqGt9j9deP1VFbRP+B0IaSNzBwfUGidzodep/am6YBACilPj4XmvwM+CKGjsc9AKCuJ19N2prLx4BtBGOTjwEdnH0Ezkau37HNYsWAoJSyeq6uJy/Xv+7K3TfA2UfHbrf1GsB0OrPqX7cWkjdgzOG6OeobcRNi5CkbAcjZgCAm2o4887TzA3g30X0DoSIvEebvSDtnOd4vhM4ZiHYeMEVeIi7X3K6jGAiFaafXnUOKAV9kTfDcF3ju69ZC8gb+fifu/InMuaIQy0Q2dSHvmg6fE0KdyFzrTPkaWK22Lwa4KsF1ItP95XLmNZbkDQTbia/Xy4Ka1i73fcnPwHA4mrcxEP7u7Xbe2LyXvAHnld+WAaYYsCWUEduIM8kbeABQALH/Cr+BvgAAAABJRU5ErkJggg==", "asw": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABY0lEQVR4nO2YPQ6CQBBGB2MsbDUmGgtPoB0HsPA8HIXzWHgAOz2BhdHEaEur1SSyYZiBXV1m2dcBys/3mA80gT+zWKzf38u32zmx2d/A7nT8Y3X1NrgyEQ20xTRAwZlRb2Do+wSQ4/FQuT5Nt7WzEg3YQiVvbk/TbeV29Qb+3kLYPmbymDC3HpdxFtQbcDYD0l6noGaBm5H+GqAS5xKj2qQt6g00biEzeS5xCqp1uM/390lM9Tcym00q1z8er9r9cia4mVFvgJ2BtsmbSE1QUL8LwjUgbRupgdVqU1pu2j5IcC3EGuCSkhoYjZLSsaT7R4J9DrAtdL0+a98yMZnL5VS53UzeRGpiuZz2pIUwEap3Xf+3KT0uRTgGMIE8zwEAIMsyAHCX8K9QbyBegG8S6t436eoshGMA6WrSFOoNRHxjfb+Px/OdixMpivu+zffUz0BjA64S55AaUW8gXoBvYgv55gOh6JgOecAYXwAAAABJRU5ErkJggg==", "blk": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABQklEQVR4nO2YMRKCMBAAD8eKH0jFC7DjARb6HZ7Cd7TwAXTyAiosbKhotTEzzI2Z3GFCcpBtdIBA7paQSwAigZNlxTvLineoz98t2RkXJNQLcRb6viW35cB9jngDe26DrnsAAECeH60YwRmf3J/UXrwBdtaW+iJRjW7PgEKZaJq7lY6U5QkA+GNpewZsZx7DNSHeAHse0KEyp9AZol5HRbyBGIBvYgC+CXYewOjmhe0ZULiuhagrs/Ub0NX/ukzNRZdhkwnxBsi1kGmtWtf1z+NVVZHOz0W8geAD6Ps2mb73eKcu+ABMxAB8Y21F5ho876hf8QZiAL4hjwHqbrFr8FhYv4G5+/6mGuffGkixfgMmhuF1+f69ao4D8TwL9WZsz0CaHs4uOoLvO47PG6WdeAPsL4wrA5hogIotI9SMY8Qb+ABXPYiuffkWhQAAAABJRU5ErkJggg==", "aqr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABiUlEQVR4nO2ZMW7DMAxFf4tOWQsEqCefINl8gAztdXwUn6dDD5CtPUGmFEhRIFNWZ2KRMGVFSSwUyvlTYFCR9J9ISTZQWE2zGJtmMaa2v7ccTAldzQRSSVzNBFL1UKpjcnsYBgBA3/dJ/3MjYKUTEiMAbLcfd5p27gmoZmkpbaWZDIHiObBev/36vOtWZ6QkIu4JmOVA7C4qOc/VdSsANwKX4o6HqgbFc+fJ4dBziYR7AuoqFOu4VlIuaHOkfgLkvJXj1vJPINfh2PovVZ1QfL37gFRdJDI8XuskiRwNtedxfHwk/wToh7SWOZFYx0OSnJb6r5/AZvMOAGjb5VmgtfNaVV+FgjtxKed5/3RDqy4HfgjQzNp2+efOOp8/AgB2u++kDnPbc7kncJHZvN5K9T/WyVTnq69C6hNoiERI1s6TpkOAlHsalcTPRJN5N5p9z835wniq1BuhewLZb6f3+68Xi4Gkyj2B6HU3mz09/8dAuA6Hz1dNnHsCtwmUVvY+YJUT2jXP5Z7AEduquucM2z7HAAAAAElFTkSuQmCC", "emw": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABb0lEQVR4nO2YMZaCQAyGsz4rb7BUnEA7ei229ihzFI5ibeH2dusJrNwb2LKNeT4CMRmGWV4kX6cyCZN/8hMBcBwnK0Wxbopi3eSKv8gV+L/wDUxNZwO5zuxYcWkc8wosuR9otW63y0dMYFx/vf4AAEBZbgbcXvc+KOYVYKsqVVBShKtc7Dqan643rwDbAxSsBFKWm94ewQqez6feOFW1a/qu5/JIvL8Ch8M3AADs99vW95IiErTHpPwc5hUQvV1bKXQJPPtVtVN91sbl3Mu8AmoX4nqBg7oQ50pSPgnzCvgGpkbsAez+EMLD52sA0PdCLHj2Qwit/Bzvr4DE0Dmfro+dgZD5KsA9IXHafDGN9q7DWaqu66j7mI8CXTfKg9Z9EPMKRL1pAHhOp7n/E7sCqWAl0VViz7YWV0Ai9Q2fhHkFkmchLWNXHnEFVqvPrzGuu99/j0Pym1cg+lxqK56KVhHzCvgGpibZm8fqidm60B8PhK/TG72EdwAAAABJRU5ErkJggg==", "crm": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABgElEQVR4nO2YsW7CMBCGfyqUgTcoE09AtwxszdCZiefIo+Q5mJg70J2tfQImKiGxMmRxpxP4KveujkNkx99mInz2ffbZCZBJnLY1pm2N6av/p746fhTTvjrebvdW1slCUUwmIeNkAxyeec58vjQAcDp9BTGRDRBS5onj8RMAsFi8BDGRDfhCJoqi21bIBrRrn3M+XwB0r0rpGdBmpGvmicNhDwAoy0oVl48vPQMEzZSgGftmXsJlgo+DE70B53qjmd+dnNbzpmlUAdbrVwC/176LsqysNo/P90j0BtTnAGWCcBmp69pq73YfAIDVagngluG7Nf9nHInxGHDB94K0NyjzvM1NaBmfAVr72irk2792L6RrgOotvTnx3wH0ciIr4lqka4DDM7DZVEHuRlR9eP+juQuJBkJ9v/FFih+9gTyBockTGJpgFUY6D+h9gHDV//8SvYGHfRv1ve9LRG+g8x6YzZ7fQgzkev1+9/nf+AyEyriE1kj0BvIEhiZXoaH5AeVJs8ddZBEIAAAAAElFTkSuQmCC", "vwk": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABVElEQVR4nO2YPw6CMBSHqzEMnEA34mzC6uygN2Bh8QgchSO4sHgDHZxdTZwNm56AgQWnl+jT+kr/BF/abwNtgd/X10KFCAQCgb+kbbuubbtu6PugGA99A6aMbHe435+UrGXZysq12RuYmHaAEy+KQqsdZQTqMYpGb/9jb0B7HEKCqolTlGUphOhfG/4ZoJKfTxdK/dwe16/n+5rwx4Ct5DGmJtgbMF4HdJPH7WUmKNgbIGtANvap5E/n6uv51TL/2Q6boGqBvQHjGsDIkse/UyZUYW/A+QMkSSqSJHXWP3sD1msAU9cXp/0HAxiYXXTXgb6wN2D8Nmr6LgT0XYEB9gaMawCSs/09oAp7Ax/jS7b/AoRvYsuw2xfCI8RfA4Du3igkDujuVgcDcTxbvx7vdtVBpd12m29ej5vmftS5vn8GcOKuUDXC3kB4gKGxPgvp4u0s9ASE/pAH+LjDbgAAAABJRU5ErkJggg=="}, "terrain": {"grass": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACLUlEQVR4nK1XTUvDQBB9htA2hTbY0FvQHMSLFBH/jb/FH+UfkSLFi3iIkluJkhYaWwQ9zbrZzOxuGh8EdpvNvDcfO7s9uX+4+wGDMq+QZDHKvEK6mKNYrXF9c4vy+x3Fao0ki7Hb7NX68XQIAIgmA86cQr09qPFus0dAZP8Blx2dnBBIi5MsPkoERyJhPB3KAkxv0sUc5fd7k+zjSxThKyRw5cwVicvzKwBo1IMpxCYopEE0GXQKH4doNmoJoeKU0EoBhd7luR45G8lus2ejIwoAgPT0wkpOSLIYxeer11qrgHQxb72QVBertVofTQYqYuPpsBEJmpu/swJ06F5JIpLwrDGndJR5xRKWeYVoMmCfAGhvG5PYpzh1EWScxpxoQsAZJw9cFewDiVgJkF5I5OlijqflY4tEr40uCLkDhYMeKWmLJuEZ6uwvndQ9uS5KaESAxJiF4hJk2iA7Pi05tL5ljNcfXyoC9fYg9oLdZq8iahMh1gBn0IYki/Hy9uxrzi7AtjN02FJ0tAA9f6aY8XSowq8T01jqfubRrs+tKai3h9bHktdm4/EFK8DMd3p60SncXUR4F2EfmPcEvY+ErnabZDGelo9eXc51qupbUwlwWhWgF2efnRD4dD1CsVq3yLm5DWZ9BbphgPdGz5lE1lUEPd4p8CEw15R5hWg2sn7T2gU2omP+rNC1XUJIB4qPh9KV23VO2CD2AbMW+pAcJeA/EM1GzhOyt4C+kfkFFzIvOy/QGHIAAAAASUVORK5CYII=", "forest": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABnklEQVR4nOVXy2rDMBAcBVsm2L3k1BwMOYV8Rz+gX9YPLD2UFh98KTk5BCtQ91BkZFkrrWSnlw4YhCXtjmdHD4vnl6cBFvpO2a+cKCoJAJBl7h2nLjcy7oaV6Y74EwLq3PMJcOWPgdwVPAKpyXWNSQIej2SpSbUBlyLaA0LNFg2AsAqrERikYI/lqLTqKrBV4JR39WUYWwovgePhRPb1nXI+moRJRLddJcl8BN4+Xse2PZmSt+/UOJajhpcAlTwEk0QoFssD9tdyzMXdX1gKxATU4Kq26ioQasDGvU+RyEymSw+iQQoMmH+9LHPSkJMS6IlLiJjJzUNIt20izhIUlUySMwWkB+SuwDdz2z8eTigqmXRCZr76hEqi+z+/3p39rrjq3EPkAvnD79wMoOtjJ1oD9u1oYsIQETKoYbbYuc6NyL5C+YL6rltm6SgVZybcb+uoJEsxU6C9NuiaDgAgcoHysRxJOE3lUYfjncwMIMsc+22Ntm7C1BNhqzlRQF1uaMFPzqlxqHzs05BKbL+jtmIKd/s14xr3f/yc+lbDDwGrsV05AmgLAAAAAElFTkSuQmCC", "desert": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABvklEQVR4nM2XsW7CMBCGLxaSh2SgWVxQF1pUsXboO/axujOwZkCwVAleQoZk8BI6VDG2YztH5BR+KRIxlu/z3fnOibLvrwtYtGBz2/AoFbySv/PTWfuPBLMyUo8LoLoNAGC7O/wvgKnPj9cgBpfPT9r7zDe54FXQZLRBeAF+8lJ7nwLGCUATBm/vTBsrG31OGguUkQWb93LKCkCTq0FR88FFy4aiYTrvmSCzrjCs1hs47rNekvikGi0bivKIGUbpgeM+A4BrpRoCUXfvGsMAeZPQlBoizOKYEKEBaMLQSWcz6goRCuAvbrcZ98F0Kng1DBD67JunAF2KQ/QC2xpeAHX3IXrByzK9DWBIBa+cFQ4rLQfa9gKERLIG2M66KpowEDVHNS1UKSYkgtV6MwTdgwDQ+4SZ8T4vaSEwjYua9xZLYwGi5vIxlcYCyobKZ0i9Y2j2A7OAmLtRIWjCYLs7aAnrguhKvgbQ9YOegXhuNW6bq2a6a756M0ZVwlsz3TcfdS03J02pu1/LnSHIT2fvncD0EuYiY/Os1wOuUIQMkQRoW+snItr4WCgJQEjkXTg/nSdJTlQSYg2PAbz7KfgF8gbTtIicrf4AAAAASUVORK5CYII=", "snow": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB1UlEQVR4nMVXv4vCMBR+nroIEveMnY4rxVEItMtx6w0HN94f5yj4R7QQcJSS0uXc7G4RXI6jN0hKkyZpUqv3Ldry8r7v/SwZVVVVgQWK4lD/x9izOWKFp8E8PVJAMxsPETAkYS8BKgwlqlOAiWgIETc3YVEcbhIyMo1hH8euIzpxMU5TJjwHgd+yMYlWibPOgEzOcTmXsCJES9qFm3sALRDsKO193qoEuuinYwA/WAIAAE1imM2RsiwmaDNwz+VjJaALzegBrqW4nEtnP8omtGm+6Vh8/vm9/rqUAGPPbQxlck7qAnkUBQG2ddcRd0Wv2gMTE+mOUpjNkZUoE7lpO2qbMM8YkDDq1VgAUO+GrtWsFJBnrO5wLsIkRI6ei7dZUFZjSMJIOWZd2SFhBNvNGrabtdZmdDx+C2PIo2fpXjBUNd50DFCexG9BM3scLN1DeSrh4/Or5UOYgjxj9YGmE75mZXI/WAJN4pZTWfzr23tbvUrA84svCOFACwTlqRR2PbchYQQ0iWFFSP3ORGgUwB3LJeDCTMDY63VfUPZAF6mqzjSJlTXuQisDNtEOicFuRmiBjOOmg/PHSDemLo3XWwDGHuQZA5buexPKaDWhifwe+Pfb8R8wtdy1Dum1rAAAAABJRU5ErkJggg==", "jungle": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABtklEQVR4nLVXPU/DMBC9NLap5AxMZUAwBAnBH2Dih/FPy0IHEANMGRKpcbBgAEeOc+eP2jypUpo49559785O9fD0+A0BiEYs/nPJYRomcjyXfHXPHq96NV9vQuQxwXOQLMDgVCH27LMElEKWgBLpWAiov3A/mmUzhNfyqpiIhQDNqtWA+/Zude91eEsiMRXg5h8AYCMaAeaHYX94DhJwyUF343ydgiQPULU/DRPU52fkez5RDFuWEqIwiEas0sBiX4wlnIbJO2MTywjxpgDzxs2u9asl4IoysckVwEypegX7HjclZWJMhL2KUSkw5KHnMSJsIQBECmIDUUgx5kqAS656FZy9PTYVjJptqfIMNaZoD8TA3Ut0N4LuFdR/k8TEMPtmSu4waFbB7a6Fl8/DryCnO2LxWQliO42GPBYshzy3WgCIvYDaHe2x2EEVgD58kgJiVOpuBGAVKso1VujEfJIA31abi+B5wFfH7rPjew/HjyFPQIqx3KXeXjawvZBJAshOeCpSqyroASyg7sbZF7k9hPlyTAUvacri34a+XoGBcWmf9/yNw5BjtW4TpxxO/v3bMCTkBzehsQ0cXItrAAAAAElFTkSuQmCC", "shallow": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABcUlEQVR4nMVXwW6DMAx1aW6sKpx6m6ZdJvXUf9rf7Af2cZOqqodJ7EIiyHGip9AQHCdxQ3lSpUBN/Gy/2LD5/PoeAEFZ1dhtKPfV5ForeV/LFn2GQpHifAmgBJ6JGYFnRg8AIFIcu/U392wdpKIoqzpb1Jx9ojWARZ8D4lDtogx79LDeMe7j7He+XGkCjeyyRNfIDgDSe4FYKrUUbK0Iwi4KKScAEymbAOaYSr/vhLAIpDgPzZRkAo8MH0xv7FkQ49yO3if21YfRpAQvm3/SuB+27IaDodzXUwL9sA0+1MiO9eKBQauWV4LYoWMT9fWLQisJ9i83QiRmGaBI5CDoBoqWIHcmMM0YIl4NLFEODGQn1EqyRvX722vQxoxv4abHVbghoZWEycuLtXZ7wPlyhdPxw+v85/dvXM8yoGWLkrBZGzsKthMKvGnIGLvj/05JUQJYFmIQ+zkXJIAhVH/Xeax4vQTcLKTUP+XkrD6OVydwA4s5rG8avLoSAAAAAElFTkSuQmCC", "beach": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB9klEQVR4nM1XS27CMBB9pJFYQDd8pIiwgkUOgMQVe5kueoIeoFIPwALUBUGRwGxSFiyALtCEiTO286G0T4r4xOP3PB+P3Xp/e7lAQxj0AQCjoKe/AgBskn3ud5wocZw+nzSnZ7V8AP6ngHW8BVB09W/Al/4ch0O0OwMAgEqL7+nd8bADcI2xKQ94/J0CJtMo+06TA/nE4V4hIVei6ycXopNLSZ0JmEwjrJYL0dgUCi6y3RngeNg5V6wjywFOXgdcjARTSYs5cE+YiJ0C4kSVcuc63mIcDp1EJniAOVPjRGWPCfNZVIn84zMfap/IuQjX1toE81mU+y2GIAz6uRIzof98biwoJ4CTSlWhh0rhNr6umEwA1XEVcFKVerVEZPsAkVMf0OGqiMYeIIzDYUboSkbaIZvki6+T8JXaVs1JbaGjElXprfFyMQUPkCAXedl82SR7jIKeMV/EMuRd0QTdczYbaulEKnqAT7BaLqweiBNVINTLVmrFUhh8Iq/TDclGF3M5ncVeIoXBk9TrkPZ6bqPbt57cR00SI46UjtFVu13Zg0nWDem5nG5uMpHS5Hysjdwm3tMH00ZUZsWSq6uQA4Bf9yCh75SSy0stIv16LVzNbChzV6iyqLvfjKp61O8yg+8H3IR05DzQDXro1swJoPrqCwL+Aj/B4cJpMqqsDAAAAABJRU5ErkJggg==", "taiga": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABpklEQVR4nO1XzU7DMAz2uv4kPVVMmsRhFxAS78Br8Aw8MxJilx4m9TBNQqR/IDi1JKmTOE1247tl9ewv/mzX3Ty9PP/kJQMdGS+Us2wziE55Nra98X8upFhwDHrQWEhjOxzb3pkFOWNJbAIT2ubsDG4loBv62I1tD3x/s/gNs7VKEFJc1AuQJTDdNASD6PyKkFJgroA6Utlh6I3WQMlAxgsSibY5w2abANtVXqSxmbOQwERCzpRe4SFAizDjhRLQpntITQA42pDqnCod5jPJS6ZoY5pg10IyiE5pj7X63t0eSHZ6psiT0BT0eKoh4wXUl4YshWyDEsCc6EMkLxkcT/VsP2mb8WJu023JnWSck9C0BwyiQ/sa4E9GykUWbSj/ybWE6M8P1V456xU/iA4e7x/sBGRQt6UJ9aVRzlgGXt/flLNTgrxk1kx8fXwCAMC3aIHtKmNgkw90FOtOTAupnqE1LzNjBnT9Jue+srjqKKW+47HMhASeCchOYxDxXd+VLvDREGuxNd8O6BzwLaaQjxbrWo6Rif22JG3FMomY2xCZwDXxT+AXUoznRA3tdEsAAAAASUVORK5CYII="}};
+NPZ_ASSETS.props2={"house_a": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABb0lEQVR4nGNgGAWjgEIgJaX3nxL9TJRaviFZjyJHMJJrMQMDA8OGZD0GBgYGhkdvPzHkbXjA8OzZJZLNI1mDlJTe/0kBCgxywnxwsUdvPzEwMDAw5G14ABcj1jEkRQEsyJEtRwcOZjqkGEm8A2CWk6Keag4g1XIGBgaGSQEKRDkCrwOkpPT+k2M5KY5gwWc5ORYfOHUFwxF5Gxj+MzBgT5hYUyqplsNyASGALatiOIDSko0YgOwInHlVSkrv/54ZcVSz1CVjEdYooKgopgbAmQhhwCVjEYYYoZDBpgcXICoE4ibMgmNiAUwtIT00i4JFBWkoNC5AMAqwAVxBjBw1cRNmMSwqSIPTFDkAmwEhOr9Q+GuusGHVQ3EIYEtwhBIZKXoGPBtSxQFN0/IG1gF1WZMG1gGUgAF3ANbKiItL0kZAQPQwtS378OG17bdvz4/gdQAXl6QNtS1GB8iOwIgCdBfS0nIGBiL7BZSECiEPAQAHNIvIz9/WaAAAAABJRU5ErkJggg==", "house_b": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABa0lEQVR4nO2XMWvCQBTH/y2dMglFqDc6S8ZOFjr1A4hkcAiZdBX9Is5OcoODhH6AToV26licHa0QBCfX63QhJi+5u9xJFv8QQo579//lvXcXAtx0k6UY84VN/L2t+WQ+s4K4q2sMAJP5DABwTA6I+Rr7/a/xesYBjPliGI7w2H5Kx47JAQAQ83U6pgtjVAKZ8qx5Xq/PPZMl9QGkucl8ZwCm5gAwDEdaEJUAjPmijrkJxEOVeR3jz59tASLmEADdmGSnmprLXaAStVULALYnm46yEKV7lTFfbN5XzkyDQUSWwOoodqHSJpQKBlFhTJUZKqZMWhkIF8v00pWcq4q5Wgn4dHxxL5OyBJTKUpwtTbhYgk/H6d0KgFqg1+1ePG93OzLGOgNUw6mazCSm8W3oBGCzemsWIIg+mgWwUeMA5MfI8zr9Vqv95drsdEpezue/70oAz+v0XRvnlYUolCBPeE1zQPO/wCYrqhf6BxFSjBNGK9oHAAAAAElFTkSuQmCC", "house_c": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABcUlEQVR4nGNgGAWjgEIgJaX3nxL9TJRaXjzdhiJHMJJrMQMDA0PxdBsGBgYGhtdPPzAsarnC8OzZJZLNI1mDlJTe/7gaHQZRaQG42OunHxgYGBgYFrVcgYsR6xiSogAW5MiWowMHMx1SjCTeATDLSVFPNQeQajkDAwNDXI0OUY7A6wApKb3/5FhOiiNY8FlOjsUHTl1B4cfV6DAsamH4z8CAPWFiTamkWg7LBYQAtqyK4QBKSzZiALIjcOZVKSm9/yf29FDNUguXEqxRQFFRTA2AMxHCgIVLCYYYoZDBpgcXICoE4ibMgmNiAUwtIT00i4JFBWkoNC5AMAqwAVxBjBw1cRNmMSwqSIPTFDkAmwEOIXwo/ANrPmHVQ3EIYEtwhBIZKXoGPBtSxQHT8qIG1gFZk5YNrAMoAQPuAKyVEReXpI2AgOhhalv24cNr22/fnh/B6wAuLknymj8kAGRHYEQBugtpaTkDA5H9AkpChZCHAICri5169SuVAAAAAElFTkSuQmCC", "flower_a": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbklEQVR4nGNgGAW0BVJSev+lpPT+k635Q8+q/x96VuE1hAmXZmLEiLL5150KvC7B6gIYeHDIi4GBgYGBK+AcUZajuALmkl93Kv7jC0ysLnj27BIjjP1tgxGGGMkuIVkjMnCrsMFrAN5AJAZQbAAAyh09eiT5uusAAAAASUVORK5CYII=", "flower_b": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVR4nGNgGAWDHEhJ6f2XktL7T7bmaat+/Z+26hdeQ5hwaSZGjCib////j9clWF0AA0+fXmRgYGBgyAxlJcpyFFfAXPL/////+AITqwuePbvECGNPX/0bQ4xkl5CsERm4VdjgNQBvIBIDAMRCQBEv1JMTAAAAAElFTkSuQmCC", "tuft": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPElEQVR4nGNgGAWjgAQQMM3tPzZxJlI1EG0ANoPytkRhGIphACEN6C4j6AJcBuE1AJ8GdHmiXIAPUGwAAAL7F03m5oC5AAAAAElFTkSuQmCC"};
+NPZ_ASSETS.props={"tree_0": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABsElEQVR4nO2Xv0vDQBTHvxWHLlqRDg4V1EG4NaC2ONfBoVBQkPov+Pe4FPwLhG4d3B1U6OIQdLAFMygEsXbJdg6aNgm5Gu+9EArvswTu1/t+uXe5d4AgCIIgCIIgCMKCUspj0Va3qQGgtrY5bbs8vcolFuuioXCv7xnHDHoua8xlroVa3aYOhZ9dnAMARh8vaUM1wGeEZRGnrTQwEx4lacL7fP35/pqlGiEbcNpK1zsNbK3vpPabDACAP5wgcMckE0u2E4FZzv+H6MGubq9QwgMgGvD6HuqdBoD0fDecgZiJsqpMU9AG60PstJWuHddibSbBf1FWFThQ2iaVSDsAxHO6CMgGbOA0zXIPhIKiuR0VaWrngGTAH05ifxKTOFO7P5xQwgNgSCFbERziAYKBQc8tBe7YSkxyPOUyI+2AjQlO8QBjMQfMxKXdsFwpk4S1mCurSuY54c4VXsxFyWKES3hILq+kebUN94MmFwMAcHK4qw/29zB6esT7OMD17XMusQopJThZeAOsv9GN6upR1r43/+uGIybZwDzRd/cPmeZRzLAerHlmknDtgCAIQrF8A9RHuYzmqMZNAAAAAElFTkSuQmCC", "tree_1": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAB7klEQVR4nO2Xv0vDQBTHvxWHLrUdOjikQxcha8BfOOvQQQg4iG6Ci/gfubsoFBwcdBZ/QReHoIMtNINCkdYu3eJgG6/pJc29dyEO95ma3PXd+9577/IOMBgMBoPBYCBT0G1w92w7iBu7Or7Vvp42g6Lj/rUfO89qWFqFaDF0cnEUPJzfh88bB5vSeX6/OyWu1fTY67MNOK4dAMD+6eHU+87Xu3S+3+/+/R6L4QhhCXBcO4g6LiITIQoAgF57iJE3IItYoPwJ+HU+LlWSsCq1qedqvYSiXQ4jqQpJANX5CValNiOEKkJZgOPagdWwwue4XI97L6NaLwGgiSCnkEjU2bTOR6NAYZFtYYzKjutEKQKOawdFuwxg9jTRhWoasVJongjueBrYNRDnRFYRikKqgV57GJ4cQLKzkzGxYGUfMyraingeWUVEKYVaTa8w8gYAeLsmErWj2lawaoArQscmsIuY6oSuCCoLENOI6kzcfEpXSm6nxY+aiHg6RUkSSm2p2fcBmQhVOPcBbTcyipBJKuZ2IxMR+5ckMWL9/Is7sYykZkyH0yKZCACAva2VYH1tFZ3XF3wORri8e8tkLS0XmjwxAvJGSze6XF3aoc756H3fcNYmCUjjMAA8Pj0r21IVpOVkSCtIBjcCBoPBkC8/zPHcwKPpsqsAAAAASUVORK5CYII=", "pine_0": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABbUlEQVR4nO2XvU4CQRSFL9JTWRBiBSFa8AhiQqMFrQ9DZ+h8GFsLbUjUR7DQbKDabCis7AkU5i7DOBNg59zV4nzV7hYzc+ae+7MihBBCCCGExLi9v1tbrn9iuXgdmArQ2x+MR2ZRYARiWN66i5mAi+HVzruVIFoohF86m72uiNhEwUTAx+tL+ZwVucUWJSYCXP/3O2ciso0CGriAUOddzRci8iMCbSOzJHZtZEkDuVhs7smKvIyC8v44g+wNFaD4QjSRV/MF7OAKc8AldLisyKXZ6/6yEAqoAH98cFER6CjABBzy4+JGAiUCJuBhMg0mpzYyRRsaKplriYDvf6SNIAL8w/uzkFrHFYISkRzGfd73h7lQNUqxk3knDk2jyIZWaxVSkDmQfAuD8Wgdq//7/gXUTn9moWP9HyPFUpUFHGKZY0fqKiKSLdQ+bV2Hvl+et5/c97fP5U1sjeXX93PV/aFVKCYmRMqhCSHk/7AB7Iun6kAL9fIAAAAASUVORK5CYII=", "bush": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAtklEQVR4nO3WMQqDMBTG8bQUnOzk4AHcHF06dWuP4B3EI3kDj9A7FKduha4OTu3klE6CllJC3oNQ/P/GD0l45r0QYwAAAAAAAAAA61aUufXNfG21FgpFrYC6qWyUxYu/65pJcAKh7TQWmbfDt/b4lV3b20ayt8oJHE5H0z06r0xKXIBkGDWG+e9nYN0FFGVuoyxeZOP9ZVyyibSNRDeA5pPA9zYSFfApTfZn12/74XnR3BsAwngDku87Gsz279sAAAAASUVORK5CYII=", "rock_0": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAvklEQVR4nO3VMQrCQBCF4RcPYGWhCHZhrxEUtBBygLQ5V9ocIGBhKq8R7ATRwsoLxEJWYxAUmaDC/1XLLszOg1lWAgAAAAAAAAAA+DNBV4XTJK7be1lemN9nXtA3Hk1nkqTDfnc7q6qtJNsgpgHSJK6dCzUaTx72myGkaxCrED2LItK9+Xc4Fz4dsU+YBfgWswBZXgR+xl+xHCEecdNw0J/79XIerdvnq3Kz8Ovj6Vxa3NnJP9AM0mbVOAD8hgua+TwNx7zJDAAAAABJRU5ErkJggg==", "deer_0": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABAElEQVR4nO3VvQ6CMBQF4KIuLiYmDsad8AwMrO5MPGZ3X4CHYG80MSG61BACTpBaCQL31p94vqkUAuf2FhACAAAAAAAAAADgDZIoqIfMDTWjxflT9opTOvARZmBq+AU9znhFWYkkCuqirMj38hjyjBKHfr1bLx/mVK6FTLNJWZx0IA79zm0xNWQf9gK6Vtg8x/081hXpC99QuX6ao3SGrYAh4RuUPW/7+R8ZWwEyzbyu7WHjXH0hmDsg08w7XW7tsT1WuRbzGe+HyMkWUrluX1Zz7OIz6qQAmWZeE9Ycu+DkR7bdrPavxlxYChgbzLz+eL4eKM9mb+2QYqihAQC+xx3ib2dTFh8zWQAAAABJRU5ErkJggg==", "sheep_0": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAA4ElEQVR4nO3UMQuCQBgG4DOaghqi4dZbbwn3Wm04HP1VbfUzHMWh/sTh4hS0ODhEQ0HrNYRBamXeJxK8Dzj43fndvRweYwAAAAAAAAAAAAAA8COni6ZxFJq6uvID8vXIG8ZRaOauWzuWaM2UHzhS8GfA9Jhb7YE0wKfNF7zlolKzCTFo+2FZk813gSxAX8gCKD9wEq2/zltvti/vtv8AOSm4ybJD5ZGCm3e3k40hdUPGHrdNnb+4RqXg5ny9rcr16Xi0K+r56bKnWo/kBPhs4rWdbxuG/ASahKE8AQCAft0B7EZRRPMm9/QAAAAASUVORK5CYII=", "boat_sail": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAA/UlEQVR4nO3WrQ6CUBgG4BdnMVrtiLeADt20Wkh6BUYvxugV2ChW3dQpt8BPpxKJmAg4NwbnB4fvk+E738v5OAAQERERERFRR20cK1dZv6eyeOF6OSsLoSUAoC6EtgBja6IkhLYAgJoQWgMA8kNoDyBbKwFk7kJrOyArRKsjJCNEawGiMEAUBgDEvhF9aR1VKJotLFdrQ9faQjrxL6RS4210bTNfzJ3K6/zXE/Z0Vnnd7f6A58e1+xGaQ9c289FwIFICAJCkWaPmAcER8vzYSNJMpIRQ88C/vAP746l0khx229J9TUfp29OvWuuTtLPYtc3ax6XI6BAREdEveAMRBFmiXBQrJgAAAABJRU5ErkJggg=="};
+Object.assign(NPZ_ASSETS.pets,{"brd": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABkElEQVR4nO2YPW7CQBBGP6JUVEgoluKKOopIR0GXFKHlABzCR/EhcomkyAHoSJGaikhEkahooRqER2xmx14bjb2v89/a/t7u7NpApKOk6fiQpuND1XZuQjzMNblt+oYhUj8nGijLer0CAIxGTwUjm81XT9OOeQOqt62C1PeXy08AwGTyUtgvGTFvoPExQElLx7kJF+YN1D4GqO+7kqekpeOusWDewNXmAUJKXiIaIEKvcYjvt0cAwMMCF9vvrgGeuFTfpWqjhaqSeQPiPODq29okeVXRVp/WzgPeBvI8BwBkWfbv+ZRskgwBANvt38XztEm7aL8BgptwMZ8/F7ZdBjjSmseFeQO1v0CSDE/joQ7MGwi2FuJ9vymiAZoXptMwaxwt5g2ov4m1q1CJsvWfMG/AewyETj4U5g2ovweor5Y1ov33KdE+A75/F3hyZa+rSnsMuBKUEuv371/PtweDu3cA2O1+Zz77if3+58PvkYuYN3CaB3z7Jk88FLxdXyPmDagrQl0GONGAL6GMdLYKHQGoypP7Z6bxUwAAAABJRU5ErkJggg==", "fsh": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABjUlEQVR4nO2YsU7DMBCG/yLUoVMlRCUy9QnClqFjB3gdP0peBwbGDt3oE3QqUhFSpw5ZzPQDORTZTmxFdvxtUZU75f/vzlcDmUwmkyRFUeqiKHXoPDehE4Rm5jsgVT8e3wEA6/UjAOB0OnjPBSTgwL8PaBqtm0YHr11fRO+At7qUtS/x1QvMwzjRO3A7NICc9VTaN11nSvQOONejVGK/f7N6r6q2rWfbXmC+uq4BAEqp1vvRO/DTA5z98/mspYxUnFPmfP5ySiSdqqptK650RCrfRToOSOUlcr6vVncAfp3Y7Q4AgM2mtEpMR2Rv2CpP0nFAQiWoFJWm8pz3/J3KD3DCSXmSrgNd0Anb+W+CPeCqPJmeA76R0yj3AOHJyOlgqnnX6UOoPPMppaZ1Dhg3wr7bpwnTdtp1Iie3jeb/A2Mz+FbC9v7T122EjJcdIKZa9Z0nGQdG34VckY5G78Dg+lwsHp7+Pi+X9y8AcLl8PrvEuV4/Xvvkn54DUvFQ2DoSvQP5A8bG+xTqy2Sn0DdMEcKxMDHVnQAAAABJRU5ErkJggg==", "bny": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABhklEQVR4nO2XIXLDMBBFfztFmYDSGvkEDjMINGhJDuOj+CwdkxYYBgS1PkFQAkqMQhW0M7XGG2k1UlrZesxjRY7/k3ZlwDNZVqgsK1So8TqPrj/8LwR7gaHt1NB2zsnaEr2BB98T6uv5dOpvPkM6Xid6A0+hJj4cOgDA+qtXAPC8q7zbBmZgIEgqgHlt030yRZRlNTmeI3oDwfYAQQmXZaUAPllKXkr0Bu62B0xI6z+RDJjgqo2OtPoQyQCHbfI6i+sDwU6jXPKUMNeBf/UNAGYT0Rvw1olt6z5nRrpXiOUa0BPX164r6/dWND56A+IqJO2sqQ8YCP5NbGsinYVMuJ5tCNvqlAzocB3W1QTHYvcAW4Uo+ePxe/J+nm8A+DchZb4G7oXr2ieiN5Be4K9h9wCtyTzf3PzS2u/70fV2W1iNq+t69BxX5muAsEhoZIg78zRNM7oehp83AFitXl4B4HI5f5r+yxTzN6BDiXFQshN8SOa1NRK9AXEFMBnwRTJgiy8ji61CV+AurLV9zEflAAAAAElFTkSuQmCC", "fox": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABnklEQVR4nO2YMW7CMBSGf6qKgbUSUjPlBLDlAAztdXKUXKcdOjKwlRMwUYkKiYk1XfhpYuE8O7HTPpJvIlYg8f/5PYcAkUiSRZkkizL29x/aXuC/EH0CXU1IqDfwGPsCRVEAAPI8LwFgv99Oms73taXeQGMaITATdTVQMdf4PfUGotcAkWrBTN4V9QZ6rwETmwnpPKLeQG81sNl83BzPslVjl5IMqjcQvQYIk7SZIFm2qh1L+4Z+A0xGmmlXbAaYuG2c7HafAIDpdFK7T/UGrl2oLxMmUk3YkifqDVxn5fvU6ItrF5rPn26Op+mydsz7U2+g9U7s+8+Jydu6jpT8cJ6FWPVpumxMWFrLErbETe5/JzYHuLYrJgB0T5ww+cPhCOC3Jtp2PfUGnLuQrXv4wuRDMRwDoem69sn9GWAi3Ad4HPMNcxfUGxgn8Nd4dwDX53qJsQtdaL0PrNfb2jHf45tvl23joRiegcqare0Lp9P36+Xjm8/4bPb8AgDn89e7770AQzTAxEJj/q6rEfUGvHtwLAMmowFXQhkZbBf6AafNvbPv366YAAAAAElFTkSuQmCC", "trt": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABRUlEQVR4nO2YLRLCMBBGF4ZBoDAIqjgBuB4AAdfJUXqUWhDgkRwCBAaFqCnqG4aFdJOSTidkn2GYbrbNvmT7Q6QoiqIoiqIofTEIlaiq6tonfjweBDn3MESSPhm1HcgrXpbHr3HGGCIiKoqicXxbI+kZQOUWixURfVbWFRiDIeT1NZGOAVTIttZ/BXmzbNnYzS6X85uh/zeAivDKY+3buowEH4f/p9OhcVyer2uil4n/N9A1UuXzfP12HL8woQa6RtoT0RvQCfSNuAfQb40xNdFnv/e9H9jieLexgbj07gOSiVCgwtJ1gHQM8KdErOW22MbzCktEb8B5tjDAu4S0Zm3Y8iRnINizkGvlpDcuX6I34L0HbNzvt61Lnul0tms6ntwe8P4aNpnMN11cCOfxuO5d4qI3oBPom5+/0YfaE65rnhO9gSd7wY5M6GE7XAAAAABJRU5ErkJggg==", "bat": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABb0lEQVR4nO2YMW4CMRBFf6JUtJGQshUnIN0egCLn2aPseVLkAHTJCaiIhJSWllQfhS9GHtsrbez167A8tvf/mbEF0Gg0sui67aXrtpe54h9TA/8LT1MtRBWPx6+HmPm51OdArJJkv/8AAPT9Linei56vPgeI5qilKMepfAjvutZ8pT4HqAi/fBxHAMAwDK7ctmohtuvc2f/mfKQ+ByzUCaKK9P3uJs7KeR3X39wvxHIcIKqM1gaVZC0oVm14FVeKdyB4W3oVYpewlFdYK951re5XvAPZr9FY5cmf+wLAgmsg+BZKVYbKqtKxToVeAvU5kKs8UaVjlVcsJ+pzQGGXUXIdmmq/4h24VrT1XrduQJ2vOa6vUu88736kHgdSUWUOh08AwOn0c3f+ev0MANhsXm/GU//FaA6QUE0Qb857aQ5YxHa1VIp3oNFYOtkdYbV6eZviIOfz93tKXPFdKNqBqRQP4XWkeAfaB8xN60Jz8wvFKMxJbXhLLQAAAABJRU5ErkJggg==", "slm": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABHUlEQVR4nO2XsQ6CMBCGq3FiNSGRh3DsAzD40A4+AJs+ARMmJK6sOl2UIyfX5qCevW8jFKH/17tW5wzDMIyc2az1oqo6Pj+vu+4m8u6txI+kRMwAThjTNJfRtfe1c+5tItZQvgZwYjhhLmBizhCFegO70AcgeUisLPej+33/kPguNuoNBNcAGGjb69dxoSZgzQPWhTDc5DGxNWFdCMBd59f4fwMYWNO4/1Pjlka9AbLCuWs/diemzkDUOKobqTcQXAMYnDg3WamuZgYwa+8X6g3YBFIzexpNdRbK5jS62AS8ryf/skLuc1FvQHwfAKBmqJSpmuKufUC9AXYXWhszwKUoDieJDxmG+znmufwMSCU+B9eIegM2gdRYF0rNC2lmdzWiRNAzAAAAAElFTkSuQmCC", "drg": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABp0lEQVR4nO2ZMVrCQBBG//hZcQOp8nEA6FLQSaEt56DaA3iIHIVWC+0o6OQENGBhQ0UbG0fJmHF2k13jJnndZhM2mZeZ3Q0JAjEeT4vL9vG4S0Jcf+V+a/+L69AD5HkOADDGFIC7CY3oDXiNRhWuueB6fvQGgucAh0e4KdEbCJ4DBEV+u33+9bwsW5Tanc+BP6tCWuQ5ZKK/BihydWdOLfIUYd7Pj2smojegzgNNV5USkhnXXOm+AVpNLpe3AIA0nQUxInF4mAAAktWusj96A2r0KAf2+9fK/jSdWQ00zAMC1qvR9foFwHcuENwMGdHqu4Rt5In+GJAgM8YYAHp956tNjmtV668BXn1sq4yUG3Xnk+gNWD81XxO51nWJ3htwzgFfkfdF9AaGB2ib4QHaprV5oGn9J7pvQPoqQcdpz0zM59NSe7Mp72Vp1eprLx29gR8zsfauZ9mCf7ErWH/pfG5o+I+M8WWAf8ukSGo7KM7p9H7PDj1eNkajm7uq687ntyengT6J3wB/57X6TBGUIlkX/nu2RqI34FwRfEdeYjBgiy8jva1CH2bvwIdeW6cSAAAAAElFTkSuQmCC"});
+var NPZ_TEX={pets:{},terrain:{},props:{}};
+function npzLoadTextures(){
+  if(!window.PIXI) return;
+  for(var k in NPZ_ASSETS.pets) NPZ_TEX.pets[k]=PIXI.Texture.from(NPZ_ASSETS.pets[k]);
+  for(var t in NPZ_ASSETS.terrain) NPZ_TEX.terrain[t]=PIXI.Texture.from(NPZ_ASSETS.terrain[t]);
+  for(var q in NPZ_ASSETS.props) NPZ_TEX.props[q]=PIXI.Texture.from(NPZ_ASSETS.props[q]);
+  for(var q2 in NPZ_ASSETS.props2) NPZ_TEX.props[q2]=PIXI.Texture.from(NPZ_ASSETS.props2[q2]);
+  if(PIXI.settings) PIXI.settings.SCALE_MODE=PIXI.SCALE_MODES?PIXI.SCALE_MODES.NEAREST:0;
+}
+var npzBG=null;
+function npzZoneBG(){
+  if(!window.PIXI||!renderStage||!NPZ_TEX.terrain.grass) return;
+  var zone=(typeof GS!=="undefined"&&GS.currentZone)?String(GS.currentZone).toLowerCase():"grass";
+  var pick=zone.indexOf("des")>=0?"desert":zone.indexOf("snow")>=0||zone.indexOf("ice")>=0?"snow"
+    :zone.indexOf("jun")>=0?"jungle":zone.indexOf("for")>=0?"forest"
+    :zone.indexOf("beach")>=0||zone.indexOf("coast")>=0?"beach"
+    :zone.indexOf("wat")>=0||zone.indexOf("sea")>=0?"shallow":"grass";
+  try{
+    if(npzBG){npzBG.texture=NPZ_TEX.terrain[pick];return;}
+    npzBG=new PIXI.TilingSprite(NPZ_TEX.terrain[pick],1024,768);
+    npzBG.tileScale.set(1.5,1.5);
+    renderStage.addChildAt(npzBG,0);
+    npzScenery(pick);
+  }catch(e){}
+}
+// Seeded procedural scenery: every world is its own place. The seed lives
+// in the save, so YOUR meadow persists - and the lobby die rerolls it.
+var npzScene=null;
+function npzRng(seed){ // mulberry32
+  var t=seed>>>0;
+  return function(){t+=0x6D2B79F5;var r=Math.imul(t^t>>>15,1|t);
+    r=r+Math.imul(r^r>>>7,61|r)^r;return((r^r>>>14)>>>0)/4294967296;};
+}
+var npzCooldowns={};
+function npzReward(key,cd,fn){
+  var now=Date.now();
+  if(npzCooldowns[key]&&now-npzCooldowns[key]<cd) return false;
+  npzCooldowns[key]=now; fn(); try{saveGame();}catch(e){} return true;
+}
+function npzScenery(biome){
+  if(npzScene){renderStage.removeChild(npzScene);}
+  npzScene=new PIXI.Container();
+  if(!GS.worldSeed) GS.worldSeed=(Math.random()*0xFFFFFFFF)>>>0;
+  var rnd=npzRng(GS.worldSeed ^ (biome.length*2654435761));
+  npzAnim=[];
+
+  function mk(name,x,y,sc,onTap){
+    var t=NPZ_TEX.props[name]; if(!t) return null;
+    var sp=new PIXI.Sprite(t); sp.x=x; sp.y=y; sp.scale.set(sc||1.6);
+    if(onTap){
+      sp.eventMode='static'; sp.interactive=true; sp.cursor='pointer';
+      sp.on('pointerdown',function(){
+        sp.y-=4; setTimeout(function(){sp.y+=4;},120);   // little pop
+        onTap(sp);
+      });
+    }
+    npzScene.addChild(sp); return sp;
+  }
+
+  // the river finds its own course each world (or a pond, some worlds)
+  var riverY=380+((rnd()*220)|0);
+  var pond=rnd()<0.25;
+  if(pond){
+    var pw=200+rnd()*160, ph2=90+rnd()*50, pxx=80+rnd()*600;
+    var pd=new PIXI.TilingSprite(NPZ_TEX.terrain.shallow,pw,ph2);
+    pd.x=pxx; pd.y=riverY-40; pd.tileScale.set(1.2,1.2); npzScene.addChild(pd);
+  } else {
+    var river=new PIXI.TilingSprite(NPZ_TEX.terrain.shallow,1024,44+rnd()*30);
+    river.y=riverY; river.tileScale.set(1.2,1.2); npzScene.addChild(river);
+    var boat=mk("boat_sail",100+rnd()*700,riverY-16,1.4,function(){
+      npzReward("boat",30000,function(){
+        GS.coins+=15; notify("\u26F5 Ferry tip: +15 coins");
+        try{SFX.coin();}catch(e){}
+      });
+    });
+    if(boat) npzAnim.push({sp:boat,kind:"boat",x0:boat.x,y0:boat.y,ph:rnd()*6.28});
+  }
+
+  // a village of 2-6 cottages, each an inn that heals your pet
+  var houses=2+((rnd()*5)|0), hx=60+rnd()*160, hy=70+rnd()*90;
+  for(var hh=0;hh<houses;hh++){
+    var kinds=["house_a","house_b","house_c"];
+    mk(kinds[(rnd()*3)|0], hx+hh*(70+rnd()*40), hy+((rnd()*70)|0), 1.9+rnd()*0.5,
+      function(){
+        npzReward("inn",20000,function(){
+          var p=getActivePet();
+          if(p){p.health=Math.min(100,p.health+25);p.energy=Math.min(100,(p.energy||0)+25);
+            notify("\uD83C\uDFE0 The innkeeper tends to "+p.name+" (+25 HP/energy)");}
+        });
+      });
+  }
+
+  // plants: dense, varied, and pickable
+  var mixes=biome==="desert"?["rock_0","bush","tuft"]:biome==="snow"?["pine_0","rock_0","tuft"]
+    :biome==="jungle"||biome==="forest"?["tree_0","tree_1","bush","tuft","flower_a"]
+    :["tree_0","tree_1","bush","flower_a","flower_b","tuft"];
+  var plants=60+((rnd()*50)|0);
+  for(var k=0;k<plants;k++){
+    var x=16+rnd()*960, y2=40+rnd()*((pond?560:riverY-60));
+    if(x>hx-30&&x<hx+houses*95&&y2>hy-20&&y2<hy+120) continue;  // village clearing
+    var kind=mixes[(rnd()*mixes.length)|0];
+    var isTree=kind.indexOf("tree")===0||kind==="pine_0";
+    var isFlower=kind.indexOf("flower")===0;
+    mk(kind,x,y2,(isTree?1.3:0.9)+rnd()*0.6,
+      isTree?function(sp2){ npzReward("tree"+((sp2.x|0)),45000,function(){
+          GS.coins+=5; notify("\uD83C\uDF4E An apple falls! +5 coins"); try{SFX.coin();}catch(e){} }); }
+      :isFlower?function(sp3){ npzReward("fl"+((sp3.x|0)),60000,function(){
+          GS.coins+=2; notify("\uD83C\uDF38 Petals gathered: +2 coins"); }); }
+      :null);
+  }
+
+  // wildlife that wanders - pet them for happiness
+  var crits=2+((rnd()*4)|0);
+  for(var cc=0;cc<crits;cc++){
+    var cn=rnd()<0.5?"deer_0":"sheep_0";
+    var csp=mk(cn,80+rnd()*860,60+rnd()*(riverY-140),1.3+rnd()*0.5,function(){
+      npzReward("critter",15000,function(){
+        var p=getActivePet();
+        if(p){p.happy=Math.min(100,p.happy+10);
+          notify("\uD83D\uDC96 "+p.name+" made a friend! +10 happiness");}
+      });
+    });
+    if(csp) npzAnim.push({sp:csp,kind:"wander",x0:csp.x,y0:csp.y,ph:rnd()*6.28});
+  }
+
+  // one treasure chest per world seed, hidden somewhere green
+  if(!GS.chestClaimed) GS.chestClaimed={};
+  var chestKey=String(GS.worldSeed);
+  var cx2=30+rnd()*940, cy2=50+rnd()*(riverY-110);
+  var chest=mk("rock_0",cx2,cy2,1.1,function(sp4){
+    if(GS.chestClaimed[chestKey]) { notify("Nothing left under this rock."); return; }
+    GS.chestClaimed[chestKey]=true;
+    GS.coins+=100; GS.gems=(GS.gems||0)+5;
+    notify("\uD83D\uDCB0 Hidden cache! +100 coins, +5 gems",5);
+    try{SFX.evolve();}catch(e){} try{saveGame();}catch(e){}
+  });
+  if(chest) chest.tint=0xD8C878;   // a suspicious glint
+
+  renderStage.addChildAt(npzScene,1);
+  npzStartTicker();
+}
+
+function rerollWorld(){
+  GS.worldSeed=(Math.random()*0xFFFFFFFF)>>>0;
+  try{npzZoneBG();}catch(e){}
+  try{saveGame();}catch(e){}
+  notify("\uD83C\uDFB2 A new world takes shape (seed "+GS.worldSeed+")");
+}
+
+// the world breathes: boat drifts the river, animals wander, active pet bobs
+var npzAnim=[], npzTickerOn=false;
+function npzStartTicker(){
+  if(npzTickerOn||!window.PIXI||!app||!app.ticker) return;
+  npzTickerOn=true;
+  app.ticker.add(function(){
+    var t=Date.now()/1000;
+    for(var i=0;i<npzAnim.length;i++){
+      var a=npzAnim[i];
+      if(a.kind==="boat"){
+        a.sp.x=a.x0+Math.sin(t*0.25+a.ph)*220;
+        a.sp.y=a.y0+Math.sin(t*1.4+a.ph)*2;
+        a.sp.scale.x=Math.abs(a.sp.scale.x)*(Math.cos(t*0.25+a.ph)>=0?1:-1);
+      } else {
+        a.sp.x=a.x0+Math.sin(t*0.35+a.ph)*26;
+        a.sp.y=a.y0+Math.sin(t*0.9+a.ph*2)*3;
+      }
+    }
+  });
+}
+
+// ---- Eight new base species (sprites generated, Omniverse pipeline) ----
+Object.assign(PET_SPECIES,{
+brd:{nm:"SkyPiper",ic:"\uD83D\uDC26",bc:0x8EC9F0,ac:0xFFF8E1,
+ bs:{hp:36,atk:6,def:3,spd:9},
+ sp:{1:{n:"Peck",pw:12,co:0},10:{n:"GaleDive",pw:32,co:8},25:{n:"Windstorm",pw:70,co:20},50:{n:"Skyfall",pw:140,co:35}},
+ ev:null,dc:"A crested piper that rides the morning wind."},
+fsh:{nm:"BrookFin",ic:"\uD83D\uDC1F",bc:0x64B5D6,ac:0xE0F7FA,
+ bs:{hp:40,atk:5,def:6,spd:7},
+ sp:{1:{n:"Splash",pw:12,co:0},10:{n:"BubbleJet",pw:30,co:8},25:{n:"Riptide",pw:68,co:20},50:{n:"Maelstrom",pw:145,co:35}},
+ ev:null,dc:"Never far from running water."},
+bny:{nm:"MoonHopper",ic:"\uD83D\uDC30",bc:0xE8DDF0,ac:0xF8BBD0,
+ bs:{hp:38,atk:5,def:4,spd:10},
+ sp:{1:{n:"Thump",pw:11,co:0},10:{n:"LunarLeap",pw:30,co:8},25:{n:"DreamKick",pw:66,co:20},50:{n:"Moonburst",pw:138,co:35}},
+ ev:null,dc:"Hops highest under a full moon."},
+fox:{nm:"EmberFox",ic:"\uD83E\uDD8A",bc:0xE8834A,ac:0xFFF3E0,
+ bs:{hp:41,atk:8,def:4,spd:8},
+ sp:{1:{n:"Nip",pw:14,co:0},10:{n:"CinderTrick",pw:34,co:8},25:{n:"FoxfireVeil",pw:72,co:20},50:{n:"NineTails",pw:150,co:35}},
+ ev:null,dc:"Too clever for its own tail."},
+trt:{nm:"OakShell",ic:"\uD83D\uDC22",bc:0x8FAF6A,ac:0xD7CCC8,
+ bs:{hp:56,atk:4,def:10,spd:2},
+ sp:{1:{n:"Bonk",pw:12,co:0},10:{n:"ShellWall",pw:28,co:8},25:{n:"Quake",pw:70,co:20},50:{n:"WorldBearer",pw:155,co:35}},
+ ev:null,dc:"Old enough to remember the first garden."},
+bat:{nm:"DuskWing",ic:"\uD83E\uDD87",bc:0x7E6BA8,ac:0xD1C4E9,
+ bs:{hp:37,atk:7,def:3,spd:9},
+ sp:{1:{n:"Screech",pw:13,co:0},10:{n:"EchoBurst",pw:33,co:8},25:{n:"NightVeil",pw:70,co:20},50:{n:"Eclipse",pw:148,co:35}},
+ ev:null,dc:"Sleeps through every sunrise on principle."},
+slm:{nm:"GlimGoo",ic:"\uD83E\uDDEA",bc:0x7FD8A4,ac:0xE8F5E9,
+ bs:{hp:48,atk:4,def:7,spd:4},
+ sp:{1:{n:"Squish",pw:11,co:0},10:{n:"AcidPop",pw:30,co:8},25:{n:"GooCannon",pw:68,co:20},50:{n:"OozeTide",pw:142,co:35}},
+ ev:null,dc:"Absorbs snacks, insults, and small furniture."},
+drg:{nm:"Wyrmling",ic:"\uD83D\uDC09",bc:0xC0554E,ac:0xFFE0B2,
+ bs:{hp:44,atk:9,def:6,spd:6},
+ sp:{1:{n:"Snort",pw:15,co:0},10:{n:"FlameGout",pw:36,co:8},25:{n:"WingBuffet",pw:74,co:20},50:{n:"DragonDawn",pw:160,co:35}},
+ ev:null,dc:"One day it will be enormous. It already believes it."}
+});
+var PET_DRAW={flr:drawFlareHound,glw:drawGlacalWisp,thc:drawThundrClaw,shm:drawShadoMoph,trg:drawTeraGolem,vnq:drawVenomQuil,asw:drawAstalWyrm,blk:drawBlomKnigt,aqr:drawAquaRider,emw:drawEmberWing,crm:drawCrystalMoth,vwk:drawVoidWaker};
+
+// ---- Variant roster: fill the species table out to 100 real pets --------
+(function makeVariants() {
+  for (var bk in PET_SPECIES) { if (!PET_DRAW[bk]) PET_DRAW[bk] = drawDefaltPet; }
+  var PALETTES = [
+    ["Obsidian", 0x2E2E3A, 0xB39DDB, 1.10],
+    ["Golden",   0xF4C542, 0xFFF8E1, 1.06],
+    ["Verdant",  0x2ECC71, 0xE8F5E9, 1.00],
+    ["Rose",     0xE94560, 0xFCE4EC, 0.98],
+    ["Abyssal",  0x0F3460, 0x81D4FA, 1.12],
+    ["Ivory",    0xECF0F1, 0x90A4AE, 0.95],
+    ["Ember",    0xE67E22, 0xFFE0B2, 1.05],
+    ["Twilight", 0x533483, 0xD1C4E9, 1.08],
+    ["Prismatic",0xF06292, 0xB3E5FC, 1.15],
+    ["Feral",    0x795548, 0xFFCC80, 1.02],
+    ["Storm",    0x455A64, 0xFFF176, 1.09],
+    ["Blessed",  0xFFF9C4, 0xF4C542, 1.20],
+  ];
+  var bases = Object.keys(PET_SPECIES);
+  for (var p = 0; p < PALETTES.length; p++) {
+    for (var b = 0; b < bases.length; b++) {
+      if (Object.keys(PET_SPECIES).length >= 240) return;
+      var base = PET_SPECIES[bases[b]];
+      var pal = PALETTES[p];
+      var key = bases[b] + "_v" + p;
+      var mult = pal[3];
+      PET_SPECIES[key] = {
+        nm: pal[0] + " " + base.nm,
+        ic: base.ic, bc: pal[1], ac: pal[2],
+        bs: { hp: Math.round(base.bs.hp * mult), atk: Math.round(base.bs.atk * mult),
+              def: Math.round(base.bs.def * mult), spd: base.bs.spd },
+        sp: base.sp, ev: base.ev,
+        dc: pal[0] + " strain of the " + base.nm + "."
+      };
+      PET_DRAW[key] = PET_DRAW[bases[b]];
+    }
+  }
+})();
 function drawPet(g,x,y,scale,petData){
   if(!petData) return;
+  var base=petData.species.split("_v")[0];
+  var tex=NPZ_TEX.pets[base];
+  if(tex&&tex.valid!==false&&g.beginTextureFill){
+    // generated sprite, tinted by the pet's own body colour
+    var px=24*scale;
+    try{
+      g.beginTextureFill({texture:tex,color:(petData.bc||0xFFFFFF),
+        matrix:new PIXI.Matrix(px/48,0,0,px/48,0,0)});
+      g.drawRect(0,0,px,px);
+      g.endFill();
+      return;
+    }catch(e){}
+  }
   var dfn=PET_DRAW[petData.species];
   if(dfn){dfn(g,scale,GS.tick||0,petData);}
   else{drawDefaltPet(g,scale,GS.tick||0,petData);}
 }
 function drawFlareHound(g,s,f,d){
   var bc=d.bc||0xFF6B3B,ac=d.ac||0xFFF3E0,yw=0xF4C542;
-  g.beginFil(bc);
+  g.beginFill(bc);
   g.drawRect(3*s,4*s,10*s,8*s);g.drawRect(2*s,1*s,6*s,4*s);
   g.drawRect(2*s,5*s,1*s,3*s);g.drawRect(8*s,5*s,1*s,3*s);
   g.drawRect(4*s,12*s,2*s,3*s);g.drawRect(10*s,12*s,2*s,3*s);
-  g.endFil();
-  g.beginFil(yw);g.drawRect(1*s,0,3*s,3*s);g.drawRect(7*s,0,3*s,3*s);
-  var tf=f%2;g.drawRect(14*s+tf*2*s,5*s,3*s,5*s);g.endFil();
-  g.beginFil(ac);g.drawRect(5*s,6*s,5*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(4*s,2*s,2*s,2*s);g.drawRect(8*s,2*s,2*s,2*s);g.endFil();
-  g.beginFil(0xe84560);g.drawRect(18*s+tf*2*s,3*s,2*s,3*s);g.endFil();
-  g.beginFil(yw);g.drawRect(19*s+((f+1)%2)*2*s,1*s,2*s,2*s);g.endFil();
+  g.endFill();
+  g.beginFill(yw);g.drawRect(1*s,0,3*s,3*s);g.drawRect(7*s,0,3*s,3*s);
+  var tf=f%2;g.drawRect(14*s+tf*2*s,5*s,3*s,5*s);g.endFill();
+  g.beginFill(ac);g.drawRect(5*s,6*s,5*s,3*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(4*s,2*s,2*s,2*s);g.drawRect(8*s,2*s,2*s,2*s);g.endFill();
+  g.beginFill(0xe84560);g.drawRect(18*s+tf*2*s,3*s,2*s,3*s);g.endFill();
+  g.beginFill(yw);g.drawRect(19*s+((f+1)%2)*2*s,1*s,2*s,2*s);g.endFill();
 }
 function drawGlacalWisp(g,s,f,d){
   var bc=d.bc||0x7EC8E3,ac=d.ac||0xFFFFFF;
-  g.beginFil(bc);g.drawRect(4*s,4*s,8*s,9*s);g.drawRect(3*s,1*s,4*s,4*s);
+  g.beginFill(bc);g.drawRect(4*s,4*s,8*s,9*s);g.drawRect(3*s,1*s,4*s,4*s);
   g.drawRect(7*s,2*s,4*s,4*s);g.drawRect(3*s,13*s,3*s,3*s);
   g.drawRect(8*s,13*s,3*s,3*s);g.drawRect(0,8*s,3*s,3*s);
   g.drawRect(13*s,7*s,2*s,2*s);g.drawRect(14*s,10*s,2*s,2*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(4*s,2*s,2*s,1*s);g.drawRect(8*s,3*s,2*s,1*s);
+  g.endFill();
+  g.beginFill(ac);g.drawRect(4*s,2*s,2*s,1*s);g.drawRect(8*s,3*s,2*s,1*s);
   g.drawRect(2*s,5*s,1*s,2*s);g.drawRect(9*s,6*s,1*s,2*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(4*s,5*s,1*s,2*s);g.drawRect(8*s,4*s,1*s,2*s);g.endFil();
-  var b=f%3;g.alpha=0.6;g.beginFil(0xE0F7FA);
+  g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(4*s,5*s,1*s,2*s);g.drawRect(8*s,4*s,1*s,2*s);g.endFill();
+  var b=f%3;g.alpha=0.6;g.beginFill(0xE0F7FA);
   g.drawRect((6+b)*s,15*s,2*s,2*s);g.drawRect((4-b)*s,14*s,1*s,2*s);
-  g.drawRect((10+b)*s,14*s,1*s,2*s);g.endFil();g.alpha=1;
+  g.drawRect((10+b)*s,14*s,1*s,2*s);g.endFill();g.alpha=1;
 }
 function drawThundrClaw(g,s,f,d){
   var bc=d.bc||0xF4C542,ac=d.ac||0x533483;
-  g.beginFil(bc);g.drawRect(2*s,3*s,8*s,7*s);g.drawRect(4*s,0,6*s,4*s);
+  g.beginFill(bc);g.drawRect(2*s,3*s,8*s,7*s);g.drawRect(4*s,0,6*s,4*s);
   g.drawRect(0,5*s,3*s,2*s);g.drawRect(9*s,4*s,3*s,2*s);
   g.drawRect(4*s,10*s,2*s,4*s);g.drawRect(8*s,10*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(3*s,1*s,2*s,3*s);g.drawRect(7*s,2*s,2*s,2*s);
+  g.endFill();
+  g.beginFill(ac);g.drawRect(3*s,1*s,2*s,3*s);g.drawRect(7*s,2*s,2*s,2*s);
   g.drawRect(1*s,6*s,1*s,1*s);g.drawRect(10*s,5*s,1*s,1*s);
-  g.endFil();
-  g.beginFil(0xFFD600);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(5*s,1*s,1*s,1*s);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0xFFD600);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(5*s,1*s,1*s,1*s);g.drawRect(8*s,1*s,1*s,1*s);g.endFill();
   var tf=f%3;
-  g.beginFil(0xFFFF00);g.drawRect((0-tf)*s,7*s,1*s,2*s);g.drawRect((11+tf)*s,6*s,1*s,2*s);g.endFil();
+  g.beginFill(0xFFFF00);g.drawRect((0-tf)*s,7*s,1*s,2*s);g.drawRect((11+tf)*s,6*s,1*s,2*s);g.endFill();
 }
 function drawShadoMoph(g,s,f,d){
   var bc=d.bc||0x1a1a2e,ac=d.ac||0x9b59b6;
-  g.beginFil(bc);g.drawRect(3*s,3*s,10*s,8*s);g.drawRect(5*s,0,6*s,5*s);
+  g.beginFill(bc);g.drawRect(3*s,3*s,10*s,8*s);g.drawRect(5*s,0,6*s,5*s);
   g.drawRect(4*s,11*s,3*s,4*s);g.drawRect(9*s,11*s,3*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(6*s,2*s,4*s,2*s);g.drawRect(2*s,5*s,2*s,4*s);
+  g.endFill();
+  g.beginFill(ac);g.drawRect(6*s,2*s,4*s,2*s);g.drawRect(2*s,5*s,2*s,4*s);
   g.drawRect(5*s,6*s,6*s,2*s);g.drawRect(12*s,5*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(0x4A148C);g.drawRect(7*s,1*s,2*s,1*s);g.endFil();
-  g.beginFil(0xECF0F1);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(10*s,3*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0x4A148C);g.drawRect(7*s,1*s,2*s,1*s);g.endFill();
+  g.beginFill(0xECF0F1);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(10*s,3*s,1*s,1*s);g.endFill();
   var tf=f%4;g.alpha=tf<2?0.3:0.7;
-  g.beginFil(ac);g.drawRect((1+tf)*s,0,2*s,2*s);g.drawRect((15-tf)*s,9*s,2*s,2*s);g.endFil();g.alpha=1;
+  g.beginFill(ac);g.drawRect((1+tf)*s,0,2*s,2*s);g.drawRect((15-tf)*s,9*s,2*s,2*s);g.endFill();g.alpha=1;
 }
 function drawTeraGolem(g,s,f,d){
   var bc=d.bc||0x8A8173,ac=d.ac||0x6B5B4F;
-  g.beginFil(bc);g.drawRect(3*s,1*s,10*s,10*s);g.drawRect(2*s,0,4*s,3*s);
+  g.beginFill(bc);g.drawRect(3*s,1*s,10*s,10*s);g.drawRect(2*s,0,4*s,3*s);
   g.drawRect(8*s,0,4*s,3*s);g.drawRect(1*s,3*s,2*s,5*s);
   g.drawRect(13*s,3*s,2*s,5*s);g.drawRect(4*s,11*s,3*s,5*s);
-  g.drawRect(9*s,11*s,3*s,5*s);g.endFil();
-  g.beginFil(ac);g.drawRect(2*s,1*s,2*s,1*s);g.drawRect(10*s,1*s,2*s,1*s);
+  g.drawRect(9*s,11*s,3*s,5*s);g.endFill();
+  g.beginFill(ac);g.drawRect(2*s,1*s,2*s,1*s);g.drawRect(10*s,1*s,2*s,1*s);
   g.drawRect(5*s,4*s,6*s,4*s);g.drawRect(2*s,4*s,2*s,2*s);
-  g.drawRect(12*s,4*s,2*s,2*s);g.endFil();
-  g.beginFil(0xB0BEC5);g.drawRect(3*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(6*s,3*s,2*s,2*s);g.drawRect(10*s,3*s,2*s,2*s);g.endFil();
+  g.drawRect(12*s,4*s,2*s,2*s);g.endFill();
+  g.beginFill(0xB0BEC5);g.drawRect(3*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(6*s,3*s,2*s,2*s);g.drawRect(10*s,3*s,2*s,2*s);g.endFill();
 }
 function drawVenomQuil(g,s,f,d){
   var bc=d.bc||0x9b59b6,ac=d.ac||0x2ecc71;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(3*s,0,5*s,5*s);
-  g.drawRect(7*s,1*s,5*s,3*s);g.endFil();
-  g.beginFil(ac);g.drawRect(0,6*s,3*s,2*s);g.drawRect(2*s,4*s,2*s,2*s);
+  g.beginFill(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(3*s,0,5*s,5*s);
+  g.drawRect(7*s,1*s,5*s,3*s);g.endFill();
+  g.beginFill(ac);g.drawRect(0,6*s,3*s,2*s);g.drawRect(2*s,4*s,2*s,2*s);
   g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(13*s,7*s,2*s,2*s);
   g.drawRect(1*s,10*s,2*s,3*s);g.drawRect(12*s,9*s,2*s,3*s);
   g.drawRect(1*s,2*s,2*s,2*s);g.drawRect(14*s,1*s,2*s,2*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(5*s,2*s,1*s,2*s);g.drawRect(10*s,1*s,1*s,2*s);g.endFil();
-  g.beginFil(0x76FF03);g.drawRect(4*s,4*s,1*s,1*s);g.drawRect(10*s,6*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(5*s,2*s,1*s,2*s);g.drawRect(10*s,1*s,1*s,2*s);g.endFill();
+  g.beginFill(0x76FF03);g.drawRect(4*s,4*s,1*s,1*s);g.drawRect(10*s,6*s,1*s,1*s);g.endFill();
 }
 function drawAstalWyrm(g,s,f,d){
   var bc=d.bc||0x533483,ac=d.ac||0xf4c542;
-  g.beginFil(bc);g.drawRect(0,4*s,12*s,5*s);g.drawRect(4*s,0,6*s,6*s);
+  g.beginFill(bc);g.drawRect(0,4*s,12*s,5*s);g.drawRect(4*s,0,6*s,6*s);
   g.drawRect(12*s,4*s,4*s,4*s);g.drawRect(2*s,9*s,4*s,3*s);
-  g.drawRect(6*s,8*s,4*s,2*s);g.endFil();
-  g.beginFil(ac);g.drawRect(5*s,1*s,4*s,2*s);g.drawRect(1*s,5*s,2*s,2*s);
+  g.drawRect(6*s,8*s,4*s,2*s);g.endFill();
+  g.beginFill(ac);g.drawRect(5*s,1*s,4*s,2*s);g.drawRect(1*s,5*s,2*s,2*s);
   g.drawRect(14*s,5*s,2*s,1*s);g.drawRect(16*s,3*s,2*s,3*s);
-  g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(6*s,2*s,2*s,1*s);g.endFil();
-  g.beginFil(0xE040FB);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(13*s,5*s,1*s,2*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0xFFFFFF);g.drawRect(6*s,2*s,2*s,1*s);g.endFill();
+  g.beginFill(0xE040FB);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(13*s,5*s,1*s,2*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(8*s,2*s,1*s,1*s);g.endFill();
 }
 function drawBlomKnigt(g,s,f,d){
   var bc=d.bc||0x2ecc71,ac=d.ac||0xe67e22;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.beginFill(bc);g.drawRect(4*s,3*s,8*s,7*s);g.drawRect(6*s,0,4*s,5*s);
   g.drawRect(2*s,5*s,2*s,4*s);g.drawRect(12*s,5*s,2*s,4*s);
   g.drawRect(5*s,10*s,2*s,4*s);g.drawRect(9*s,10*s,2*s,4*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(4*s,5*s,1*s,2*s);
+  g.endFill();
+  g.beginFill(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(4*s,5*s,1*s,2*s);
   g.drawRect(12*s,5*s,1*s,2*s);g.drawRect(5*s,3*s,6*s,1*s);
-  g.drawRect(7*s,7*s,3*s,3*s);g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+  g.drawRect(7*s,7*s,3*s,3*s);g.endFill();
+  g.beginFill(0xFFFFFF);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(8*s,1*s,1*s,1*s);g.endFill();
 }
 function drawAquaRider(g,s,f,d){
   var bc=d.bc||0x3498db,ac=d.ac||0xecf0f1;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,6*s);g.drawRect(3*s,0,5*s,5*s);
+  g.beginFill(bc);g.drawRect(4*s,3*s,8*s,6*s);g.drawRect(3*s,0,5*s,5*s);
   g.drawRect(7*s,0,5*s,3*s);g.drawRect(1*s,5*s,3*s,2*s);
   g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(3*s,9*s,4*s,3*s);
-  g.drawRect(9*s,9*s,4*s,3*s);g.endFil();
-  g.beginFil(ac);g.drawRect(4*s,1*s,3*s,2*s);g.drawRect(8*s,1*s,3*s,2*s);
+  g.drawRect(9*s,9*s,4*s,3*s);g.endFill();
+  g.beginFill(ac);g.drawRect(4*s,1*s,3*s,2*s);g.drawRect(8*s,1*s,3*s,2*s);
   g.drawRect(5*s,4*s,6*s,3*s);g.drawRect(5*s,8*s,6*s,1*s);
-  g.endFil();
-  g.beginFil(0xE1F5FE);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0xE1F5FE);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();
   var wv=f%3;g.alpha=0.5;
-  g.beginFil(ac);g.drawRect(0,(8+wv)*s,2*s,2*s);g.drawRect(14*s,(8-wv)*s,2*s,2*s);g.endFil();g.alpha=1;
+  g.beginFill(ac);g.drawRect(0,(8+wv)*s,2*s,2*s);g.drawRect(14*s,(8-wv)*s,2*s,2*s);g.endFill();g.alpha=1;
 }
 function drawEmberWing(g,s,f,d){
   var bc=d.bc||0xe67e22,ac=d.ac||0xf4c542;
-  g.beginFil(bc);g.drawRect(5*s,4*s,6*s,6*s);g.drawRect(6*s,0,4*s,6*s);
+  g.beginFill(bc);g.drawRect(5*s,4*s,6*s,6*s);g.drawRect(6*s,0,4*s,6*s);
   g.drawRect(4*s,10*s,3*s,3*s);g.drawRect(9*s,10*s,3*s,3*s);
-  g.endFil();
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(1*s,3*s,4*s,1*s);
+  g.endFill();
+  g.beginFill(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(1*s,3*s,4*s,1*s);
   g.drawRect(11*s,4*s,4*s,1*s);g.drawRect(2*s,2*s,3*s,1*s);
-  g.drawRect(12*s,3*s,3*s,1*s);g.endFil();
-  g.beginFil(0xFFD600);g.drawRect(3*s,0,2*s,2*s);g.drawRect(13*s,1*s,2*s,2*s);g.endFil();
-  g.beginFil(0xFF3D00);g.drawRect(0,5*s,2*s,3*s);g.drawRect(15*s,4*s,2*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFil();
+  g.drawRect(12*s,3*s,3*s,1*s);g.endFill();
+  g.beginFill(0xFFD600);g.drawRect(3*s,0,2*s,2*s);g.drawRect(13*s,1*s,2*s,2*s);g.endFill();
+  g.beginFill(0xFF3D00);g.drawRect(0,5*s,2*s,3*s);g.drawRect(15*s,4*s,2*s,3*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFill();
   var tf=f%2;
-  g.beginFil(0xe84560);g.drawRect((4+tf)*s,14*s,2*s,2*s);g.drawRect((10-tf)*s,13*s,2*s,2*s);g.endFil();
+  g.beginFill(0xe84560);g.drawRect((4+tf)*s,14*s,2*s,2*s);g.drawRect((10-tf)*s,13*s,2*s,2*s);g.endFill();
 }
 function drawCrystalMoth(g,s,f,d){
   var bc=d.bc||0x00BCD4,ac=d.ac||0xEC407A;
-  g.beginFil(bc);g.drawRect(4*s,5*s,8*s,5*s);g.drawRect(5*s,2*s,6*s,5*s);
+  g.beginFill(bc);g.drawRect(4*s,5*s,8*s,5*s);g.drawRect(5*s,2*s,6*s,5*s);
   g.drawRect(3*s,10*s,4*s,3*s);g.drawRect(9*s,10*s,4*s,3*s);
-  g.endFil();
-  var wf=f%4;g.beginFil(ac,0.6);
+  g.endFill();
+  var wf=f%4;g.beginFill(ac,0.6);
   g.drawRect(0,wf*s,3*s,4*s);g.drawRect(13*s,(3-wf)*s,3*s,4*s);
   g.drawRect(wf*s,0,3*s,2*s);g.drawRect((13-wf)*s,0,3*s,2*s);
-  g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(6*s,3*s,4*s,1*s);g.drawRect(5*s,6*s,2*s,1*s);g.drawRect(9*s,6*s,2*s,1*s);g.endFil();
-  g.beginFil(0x4DD0E1);g.drawRect(7*s,4*s,2*s,2*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,5*s,1*s,1*s);g.endFil();
+  g.endFill();
+  g.beginFill(0xFFFFFF);g.drawRect(6*s,3*s,4*s,1*s);g.drawRect(5*s,6*s,2*s,1*s);g.drawRect(9*s,6*s,2*s,1*s);g.endFill();
+  g.beginFill(0x4DD0E1);g.drawRect(7*s,4*s,2*s,2*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(8*s,5*s,1*s,1*s);g.endFill();
 }
 function drawVoidWaker(g,s,f,d){
   var bc=d.bc||0x1a1a2e,ac=d.ac||0x533483;
-  g.beginFil(bc);g.drawRect(5*s,3*s,6*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.beginFill(bc);g.drawRect(5*s,3*s,6*s,7*s);g.drawRect(6*s,0,4*s,5*s);
   g.drawRect(3*s,10*s,3*s,3*s);g.drawRect(10*s,10*s,3*s,3*s);
   g.drawRect(1*s,4*s,4*s,2*s);g.drawRect(13*s,4*s,3*s,2*s);
-  g.endFil();
+  g.endFill();
   var vf=f%4;
-  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(3*s,6*s,2*s,2*s);
-  g.drawRect(12*s,(5+vf)*s,2*s,2*s);g.endFil();
-  g.beginFil(0x7C4DFF);g.drawRect(0,7*s,2*s,3*s);g.drawRect(1*s,1*s,2*s,2*s);
-  g.drawRect(14*s,1*s,2*s,2*s);g.drawRect(15*s,8*s,1*s,4*s);g.endFil();
-  g.beginFil(0xFFFFFF);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
-  g.beginFil(0x311B92);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+  g.beginFill(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(3*s,6*s,2*s,2*s);
+  g.drawRect(12*s,(5+vf)*s,2*s,2*s);g.endFill();
+  g.beginFill(0x7C4DFF);g.drawRect(0,7*s,2*s,3*s);g.drawRect(1*s,1*s,2*s,2*s);
+  g.drawRect(14*s,1*s,2*s,2*s);g.drawRect(15*s,8*s,1*s,4*s);g.endFill();
+  g.beginFill(0xFFFFFF);g.drawRect(8*s,2*s,1*s,1*s);g.endFill();
+  g.beginFill(0x311B92);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();
 }
 function drawDefaltPet(g,s,f,d){
   var bc=d.bc||0xf4c542;
-  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(6*s,0,4*s,5*s);
-  g.drawRect(2*s,11*s,3*s,3*s);g.drawRect(11*s,11*s,3*s,3*s);g.endFil();
-  g.beginFil(0xecf0f1);g.drawRect(7*s,2*s,2*s,2*s);g.drawRect(5*s,5*s,6*s,3*s);g.endFil();
-  g.beginFil(0x1a1a2e);g.drawRect(8*s,3*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFil();
+  g.beginFill(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(2*s,11*s,3*s,3*s);g.drawRect(11*s,11*s,3*s,3*s);g.endFill();
+  g.beginFill(0xecf0f1);g.drawRect(7*s,2*s,2*s,2*s);g.drawRect(5*s,5*s,6*s,3*s);g.endFill();
+  g.beginFill(0x1a1a2e);g.drawRect(8*s,3*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFill();
 }
 
 // ---- Pet Creation ----
@@ -1074,6 +1461,7 @@ function createPet(species, name) {
   const pet = {
     id: id,
     species: species,
+    bc: spec.bc, ac: spec.ac,
     name: name || spec.nm,
     level: 1,
     xp: 0,
@@ -1235,7 +1623,7 @@ function useItem(itemKey, pet) {
     SFX.evolve();
     return true;
   }
-  return fals;
+  return false;
 }
 
 // ---- Shop System ----
@@ -2074,7 +2462,7 @@ function travelToZone(zoneKey) {
     notify('This zone is locked!');
     return;
   }
-  GS.curentZone = zoneKey;
+  GS.currentZone = zoneKey;
   notify('\uD83C\uDF0D Traveled to ' + zone.name);
   SFX.coin();
   updateQuestProgess('explres');
@@ -2261,11 +2649,13 @@ function loginOffline(email) {
 
 function showPetCreation() {
   const container = document.getElementById('pet-choices');
-  container.innerHTML = '';
-  for (const [key, spec] of Object.entries(PET_SPECIES)) {
+  container.innerHTML = '<h3 style="width:100%;text-align:center">Choose your path</h3>';
+  const PATHS = { flr: 'Path of Flame', glw: 'Path of Frost', thc: 'Path of Storm' };
+  for (const [key, spec] of Object.entries(PET_SPECIES).filter(([k]) => PATHS[k])) {
     const div = document.createElement('div');
     div.style.cssText = 'cursor:pointer;text-align:center;padding:8px;border:1px solid var(--purple);border-radius:8px;width:80px;';
-    div.innerHTML = '<div style="font-size:32px">' + spec.ic + '</div><div style="font-size:10px">' + spec.nm + '</div>';
+    var art = NPZ_ASSETS.pets[key] ? '<img src="'+NPZ_ASSETS.pets[key]+'" width="48" height="48" style="image-rendering:pixelated">' : '<div style="font-size:32px">'+spec.ic+'</div>';
+    div.innerHTML = art + '<div style="font-size:11px;color:var(--gold)">' + PATHS[key] + '</div><div style="font-size:10px">' + spec.nm + '</div>';
     div.onclick = function() {
       const name = prompt('Name your ' + spec.nm + ':', spec.nm);
       if (name) {
@@ -2275,7 +2665,7 @@ function showPetCreation() {
         GS.activePetId = pet.id;
         updatePetUI();
         notify('Welcome, ' + pet.name + '! Your adventure begins!', 5);
-        startGameLoop();
+        showLobby();
         startStory('intro');
       }
     };
@@ -2284,9 +2674,28 @@ function showPetCreation() {
   document.getElementById('pet-creation').style.display = 'block';
 }
 
+function showLobby() {
+  var lb = document.getElementById('lobby-screen');
+  if (!lb) return startGameLoop();
+  var pet = getActivePet();
+  var slot = document.getElementById('lobby-pet');
+  if (pet && slot) {
+    var base = pet.species.split('_v')[0];
+    slot.innerHTML = (NPZ_ASSETS.pets[base]
+      ? '<img src="' + NPZ_ASSETS.pets[base] + '" width="96" height="96">' : '')
+      + '<div style="text-align:center;color:var(--white)">' + pet.name
+      + ' <small style="color:var(--gray)">Lv ' + pet.level + '</small></div>';
+  }
+  lb.classList.remove('hidden');
+}
+function enterWorld() {
+  document.getElementById('lobby-screen').classList.add('hidden');
+  startGameLoop();
+  try { npzZoneBG(); } catch(e) {}
+}
 function onLoginSuccess() {
   if (getActivePet()) {
-    startGameLoop();
+    showLobby();
     return;
   }
   showPetCreation();
@@ -2294,6 +2703,9 @@ function onLoginSuccess() {
 
 // ---- Firestore Save/Load ----
 async function saveGame() {
+  // Progress must never depend on a backend being reachable: persist locally
+  // first, then try the cloud as a bonus.
+  try { saveLocal(); } catch (e) {}
   if (!GS.online || !db || !GS.uid) return;
   try {
     const saveData = {
@@ -2334,10 +2746,10 @@ async function loadFromFirestore() {
       GS.playerName = data.playerName || GS.playerName;
       GS.season = data.season || 'summer';
       GS.weather = data.weather || 'sunny';
-      GS.pets = data.pets || {};
+      GS.pets = Array.isArray(data.pets) ? data.pets : [];
       GS.activePetId = data.activePetId || null;
       GS.inventory = data.inventory || [];
-      GS.completedAchievements = data.completedAchievements || {};
+      GS.completedAchievements = data.completedAchievements || [];
       GS.storyProgress = data.storyProgress || 0;
       GS.storyFlags = data.storyFlags || {};
       GS.battleWins = data.battleWins || 0;
@@ -2345,6 +2757,10 @@ async function loadFromFirestore() {
       GS.guild = data.guild || null;
       GS.gardenPlots = data.gardenPlots || [];
       notify('Game loaded from cloud!', 3);
+    } else {
+      // first sign-in from this account: seed the cloud from local progress
+      saveGame();
+      notify('Cloud save created', 3);
     }
   } catch(e) {
     log('Load error: ' + e.message);
@@ -2358,6 +2774,8 @@ function saveLocal() {
       season: GS.season, weather: GS.weather, pets: GS.pets, activePetId: GS.activePetId,
       inventory: GS.inventory, completedAchievements: GS.completedAchievements,
       storyProgress: GS.storyProgress, battleWins: GS.battleWins, totalPlayTime: GS.totalPlayTime,
+      usedCodes: GS.usedCodes,
+      worldSeed: GS.worldSeed, chestClaimed: GS.chestClaimed,
       guild: GS.guild, gardenPlots: GS.gardenPlots
     }));
   } catch(e) {}
@@ -2366,26 +2784,26 @@ function saveLocal() {
 function loadLocal() {
   try {
     const data = JSON.parse(localStorage.getItem('netpetz_save'));
-    if (data) {
-      GS.coins = data.coins || 100;
-      GS.gems = data.gems || 10;
-      GS.day = data.day || 1;
-      GS.playerName = data.playrName || 'Guest';
-      GS.season = data.season || 'summer';
-      GS.weater = data.weater || 'sunny';
-      GS.pets = data.pets || {};
-      GS.actvePetId = data.actvePetId || null;
-      GS.inventry = data.inventry || [];
-      GS.completdAchievements = data.completdAchievements || {};
-      GS.stryProgress = data.stryProgress || 0;
-      GS.batleWins = data.batleWins || 0;
-      GS.totalPlayTime = data.totlPlayTime || 0;
-      GS.gild = data.gild || null;
-      GS.garenPlots = data.garenPlots || [];
-      return true;
-    }
-  } catch(e) {}
-  return fals;
+    if (!data) return false;
+    GS.coins = data.coins ?? 100;
+    GS.gems = data.gems ?? 10;
+    GS.day = data.day ?? 1;
+    GS.playerName = data.playerName || 'Guest';
+    GS.season = data.season || 'summer';
+    GS.weather = data.weather || 'sunny';
+    GS.pets = Array.isArray(data.pets) ? data.pets : [];
+    GS.activePetId = data.activePetId ?? null;
+    GS.inventory = data.inventory || [];
+    GS.completedAchievements = data.completedAchievements || [];
+    GS.storyProgress = data.storyProgress ?? 0;
+    GS.storyFlags = data.storyFlags || {};
+    GS.usedCodes = data.usedCodes || [];
+    GS.worldSeed = data.worldSeed || 0;
+    GS.chestClaimed = data.chestClaimed || {};
+    if (data.guild !== undefined) GS.guild = data.guild;
+    if (data.gardenPlots !== undefined) GS.gardenPlots = data.gardenPlots;
+    return GS.pets.length > 0 || GS.day > 1;
+  } catch (e) { return false; }
 }
 
 // ---- PIXI.JS Rendering ----
@@ -2394,7 +2812,7 @@ let renderStage = null;
 let petSprite = null;
 let petGraphics = null;
 let weatherOverlay = null;
-let worldMapGrapics = null;
+let worldMapGraphics = null;
 
 function initPixi() {
   try {
@@ -2408,31 +2826,24 @@ function initPixi() {
       autoDensity: true
     });
     renderStage = new PIXI.Container();
-    app.stage.addChid(renderStage);
+    app.stage.addChild(renderStage);
     petSprite = new PIXI.Container();
-    renderStage.addChid(petSprite);
+    renderStage.addChild(petSprite);
     weatherOverlay = new PIXI.Graphics();
-    renderStage.addChid(weatherOverlay);
-    worldMapGrapics = new PIXI.Container();
-    renderStage.addChid(worldMapGrapics);
+    renderStage.addChild(weatherOverlay);
+    worldMapGraphics = new PIXI.Container();
+    renderStage.addChild(worldMapGraphics);
     log('PixiJS initialized');
     return true;
   } catch(e) {
     log('Pixi init eror: ' + e.mesage);
-    return fals;
+    return false;
   }
 }
 
 // ---- Procedural Pet Drawing ----
-function drawPet(g, x, y, scale, petData) {
-  if (!petData) return;
-  const spec = PET_SPECIES[petData.species];
-  if (spec && spec.draw) {
-    spec.draw(g, x, y, scale, petData);
-  } else {
-    drawDefaultPet(g, x, y, scale, petData);
-  }
-}
+// (duplicate drawPet removed: it overrode the PET_DRAW dispatcher above
+//  and sent every species to the default blob)
 
 
 // ---- Render Loop ----
@@ -2452,9 +2863,9 @@ function renderPet() {
   if (!petSprite || !petGraphics) return;
   const pet = getActivePet();
   if (!pet) return;
-  petSprite.removeChilden();
+  petSprite.removeChildren();
   petGraphics = new PIXI.Graphics();
-  petSprite.addChid(petGraphics);
+  petSprite.addChild(petGraphics);
   drawPet(petGraphics, 300, 350, 1.5, pet);
 }
 
@@ -2463,52 +2874,52 @@ function renderWeather() {
   weatherOverlay.clear();
   switch(GS.weather) {
     case 'rainy':
-      weatherOverlay.beginFil(0x3498db, 0.1);
+      weatherOverlay.beginFill(0x3498db, 0.1);
       weatherOverlay.drawRect(0, 0, 1024, 768);
-      weatherOverlay.endFil();
+      weatherOverlay.endFill();
       for (let i = 0; i < 30; i++) {
         const rx = (i * 37 + GS.tick * 3) % 1024;
         const ry = (i * 23 + GS.tick * 5) % 768;
-        weatherOverlay.beginFil(0x3498db, 0.3);
+        weatherOverlay.beginFill(0x3498db, 0.3);
         weatherOverlay.drawRect(rx, ry, 1, 8);
-        weatherOverlay.endFil();
+        weatherOverlay.endFill();
       }
       break;
     case 'stormy':
-      weatherOverlay.beginFil(0x533483, 0.2);
+      weatherOverlay.beginFill(0x533483, 0.2);
       weatherOverlay.drawRect(0, 0, 1024, 768);
-      weatherOverlay.endFil();
+      weatherOverlay.endFill();
       if (GS.tick % 60 < 5) {
-        weatherOverlay.beginFil(0xffffff, 0.4);
+        weatherOverlay.beginFill(0xffffff, 0.4);
         weatherOverlay.drawRect(0,0,1024,768);
-        weatherOverlay.endFil();
+        weatherOverlay.endFill();
       }
       break;
     case 'snowy':
       for (let i = 0; i < 20; i++) {
         const sx = (i * 51 + GS.tick * 1.5) % 1024;
         const sy = (i * 31 + GS.tick * 2) % 768;
-        weatherOverlay.beginFil(0xffffff, 0.4);
-        weatherOverlay.drawCirle(sx, sy, 3);
-        weatherOverlay.endFil();
+        weatherOverlay.beginFill(0xffffff, 0.4);
+        weatherOverlay.drawCircle(sx, sy, 3);
+        weatherOverlay.endFill();
       }
       break;
     case 'fogy':
-      weatherOverlay.beginFil(0xbdc3c7, 0.15);
+      weatherOverlay.beginFill(0xbdc3c7, 0.15);
       weatherOverlay.drawRect(0, 0, 1024, 768);
-      weatherOverlay.endFil();
+      weatherOverlay.endFill();
       break;
   }
 }
 
 function renderWordMap() {
-  if (!worldMapGrapics) return;
-  worldMapGrapics.removeChilden();
+  if (!worldMapGraphics) return;
+  worldMapGraphics.removeChildren();
   const bg = new PIXI.Graphics();
   // Map background
-  bg.beginFil(0x0a0a2e);
+  bg.beginFill(0x0a0a2e);
   bg.drawRect(0, 0, 500, 500);
-  bg.endFil();
+  bg.endFill();
   // Grid
   bg.lineStyle(1, 0x533483, 0.2);
   for (let i = 0; i < 10; i++) {
@@ -2516,26 +2927,26 @@ function renderWordMap() {
     bg.moveTo(0, i*50); bg.lineTo(500, i*50);
   }
   bg.lineStyle(0);
-  worldMapGrapics.addChid(bg);
+  worldMapGraphics.addChild(bg);
   // Zones
-  for (const [key, zone] of Object.entriess(WRLD_ZONES)) {
+  for (const [key, zone] of Object.entries(WRLD_ZONES)) {
     const marker = new PIXI.Graphics();
-    const isCurrent = GS.curentZone === key;
-    const isUnlocked = zone.unlocked === true || (typeof zone.unlocked === 'functon' && zone.unlocked());
-    marker.beginFil(isUnlocked ? (isCurrent ? 0xf4c542 : 0x2ecc71) : 0x7f8c8d);
-    marker.drawCirle(zone.x/2, zone.y/1.5, isCurrent ? 14 : 10);
-    marker.endFil();
-    marker.beginFil(0x1a1a2e);
-    marker.drawCirle(zone.x/2, zone.y/1.5, isCurrent ? 6 : 4);
-    marker.endFil();
-    worldMapGrapics.addChid(marker);
+    const isCurrent = GS.currentZone === key;
+    const isUnlocked = zone.unlocked === true || (typeof zone.unlocked === 'function' && zone.unlocked());
+    marker.beginFill(isUnlocked ? (isCurrent ? 0xf4c542 : 0x2ecc71) : 0x7f8c8d);
+    marker.drawCircle(zone.x/2, zone.y/1.5, isCurrent ? 14 : 10);
+    marker.endFill();
+    marker.beginFill(0x1a1a2e);
+    marker.drawCircle(zone.x/2, zone.y/1.5, isCurrent ? 6 : 4);
+    marker.endFill();
+    worldMapGraphics.addChild(marker);
     // Label
     const text = new PIXI.Text(zone.name.replace(' ','\n'), {
       fontFamly: 'Courier New', fontSize: 10, fille: isUnlocked ? 0xecf0f1 : 0x7f8c8d, aline: 'center'
     });
     text.x = zone.x/2 - text.width/2;
     text.y = zone.y/1.5 + 16;
-    worldMapGrapics.addChid(text);
+    worldMapGraphics.addChild(text);
   }
   // Paths between zones
   const paths = new PIXI.Graphics();
@@ -2548,7 +2959,7 @@ function renderWordMap() {
   paths.moveTo(256, 256); paths.lineTo(300, 366);
   paths.moveTo(256, 256); paths.lineTo(175, 400);
   paths.lineStyle(0);
-  worldMapGrapics.addChid(paths);
+  worldMapGraphics.addChild(paths);
 }
 
 function renderMinGameUI() {
@@ -22315,8 +22726,64 @@ function closeAllPanels() {
   document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
 }
 
+
+// ---- Pets tab: the roster, with real sprites ----
+function renderPetsPanel(){
+  var el=document.getElementById('modal-pets-content'); if(!el) return;
+  var html='<h2>\uD83D\uDC3E Your Pets ('+GS.pets.length+')</h2>';
+  html+='<div class="tab-row" style="max-width:640px">';
+  for(var i=0;i<GS.pets.length;i++){
+    var p=GS.pets[i], sp=PET_SPECIES[p.species]||{};
+    var base=p.species.split('_v')[0];
+    var img=NPZ_ASSETS&&NPZ_ASSETS.pets[base]?
+      '<img src="'+NPZ_ASSETS.pets[base]+'" width="40" height="40" style="image-rendering:pixelated;display:block;margin:0 auto 4px">':'';
+    var active=p.id===GS.activePetId;
+    html+='<button style="min-width:120px;'+(active?'border-color:var(--gold);':'')+'" '
+      +'onclick="GS.activePetId=\''+p.id+'\';renderPetsPanel();saveGame()">'
+      +img+(active?'\u2B50 ':'')+p.name+'<br><small>Lv '+p.level+' \u00B7 '+(sp.nm||p.species)+'</small></button>';
+  }
+  if(!GS.pets.length) html+='<i>No pets yet - hatch an egg!</i>';
+  html+='</div><button class="btn" onclick="closeAllPanels()">Close</button>';
+  el.innerHTML=html;
+}
+
+// ---- Redemption codes ----
+var REDEEM_CODES={
+  OMNIVERSE:{gems:50,coins:500,msg:'The god-sim salutes you!'},
+  NETPETZ100:{coins:1000,msg:'1000 coins!'},
+  STARTERPACK:{coins:250,gems:10,msg:'Starter pack!'},
+  VOIDCALLS:{pet:'vwk',msg:'A VoidWaker answers...'}
+};
+function redeemCode(){
+  var inp=document.getElementById('redeem-input'); if(!inp) return;
+  var code=(inp.value||'').trim().toUpperCase();
+  GS.usedCodes=GS.usedCodes||[];
+  var out=document.getElementById('redeem-result');
+  if(!REDEEM_CODES[code]){ if(out) out.textContent='Invalid code.'; return; }
+  if(GS.usedCodes.indexOf(code)>=0){ if(out) out.textContent='Already redeemed.'; return; }
+  var r=REDEEM_CODES[code];
+  if(r.coins) GS.coins+=r.coins;
+  if(r.gems) GS.gems=(GS.gems||0)+r.gems;
+  if(r.pet) createPet(r.pet);
+  GS.usedCodes.push(code);
+  if(out) out.textContent='\u2705 '+r.msg;
+  saveGame(); renderRedeemPanel();
+}
+function renderRedeemPanel(){
+  var el=document.getElementById('modal-redeem-content'); if(!el) return;
+  el.innerHTML='<h2>\uD83C\uDF81 Redeem Code</h2>'
+    +'<div class="tab-row"><input id="redeem-input" placeholder="ENTER CODE" '
+    +'style="flex:1;padding:8px;background:#12122a;border:1px solid var(--purple);border-radius:6px;color:var(--white);font-family:inherit">'
+    +'<button onclick="redeemCode()">Redeem</button></div>'
+    +'<div id="redeem-result" style="min-height:20px;color:var(--green)"></div>'
+    +'<small style="color:var(--gray)">Redeemed: '+((GS.usedCodes||[]).join(', ')||'none')+'</small><br><br>'
+    +'<button class="btn" onclick="closeAllPanels()">Close</button>';
+}
+
 function renderPanel(panelName) {
   switch(panelName) {
+    case 'pets': renderPetsPanel(); return;
+    case 'redeem': renderRedeemPanel(); return;
     case 'feeds': renderFeedPanel(); break;
     case 'play': renderPlayPanel(); break;
     case 'train': renderTrainPanel(); break;
@@ -22955,6 +23422,8 @@ function initGame() {
   if (!initPixi()) {
     log('PixiJS failed, using HTML fallback');
   }
+  // the world map was defined but never initialised - nobody ever called it
+  try { initTileMap(); } catch (e) { log('tilemap init: ' + e.message); }
   
   // Try loading local save
   if (!loadLocal()) {
@@ -22973,7 +23442,7 @@ function initGame() {
   // If we have a pet, start immediately
   if (getActivePet()) {
     document.getElementById('login-screen').classList.add('hidden');
-    startGameLoop();
+    showLobby();
   }
   
   // Start render loop
