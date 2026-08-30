@@ -727,93 +727,90 @@ function gameTick() {
   updatePetUI();
   updateCurrencyDisplay();
 }
+// SeedRandom - hash noise for procedural generation
+function SeedRandom(s){this.seed=s|0;}
+function hash(x,y,s){var r=Math.imul(x,668265261)^Math.imul(y,374761393)^Math.imul(s,2654435769);r=Math.imul(r^r>>>15,2246822507);r=Math.imul(r^r>>>13,3266489909);return((r^r>>>16)>>>0)/4294967296;}
+var smoothstep=function(t){return t*t*(3-2*t);};
+SeedRandom.prototype={at:function(x,y){var fx=Math.floor(x),fy=Math.floor(y),sx=smoothstep(x-fx),sy=smoothstep(y-fy);var a=hash(fx,fy,this.seed),b=hash(fx+1,fy,this.seed),c=hash(fx,fy+1,this.seed),d=hash(fx+1,fy+1,this.seed);return(a*(1-sx)+b*sx)*(1-sy)+(c*(1-sx)+d*sx)*sy;},fbm:function(x,y,o,l,gain){o=o||5;l=l||2;gain=gain||0.5;var a=0,w=1,t=0,px=x,py=y;for(var i=0;i<o;i++){a+=this.at(px,py)*w;t+=w;w*=gain;px*=l;py*=l;}return a/t;},rid:function(x,y,o){o=o||4;var a=0,w=1,t=0,px=x,py=y;for(var i=0;i<o;i++){var n=1-Math.abs(this.at(px,py)*2-1);a+=n*n*w;t+=w;w*=0.5;px*=2;py*=2;}return a/t;}};
+
+// Omniverse-style terrain generation (20 biomes)
+var TERRAIN_NAMES=["deep","ocean","shallow","river","ice","beach","desert","savanna","grass","steppe","forest","taiga","jungle","swamp","tundra","snow","rock","peak","lava","ash"];
+var TERRAIN_COLORS={deep:0x2E4A5C,ocean:0x3D6478,shallow:0x6E9AA8,river:0x5A8CA0,ice:0xC6D6D8,beach:0xD9C89A,desert:0xD8C088,savanna:0xC6B063,grass:0x7CB05A,steppe:0xB2B080,forest:0x4E8C42,taiga:0x41705C,jungle:0x3C8442,swamp:0x5E7248,tundra:0xACB098,snow:0xE4E4DC,rock:0x8A8173,peak:0xA69E90,lava:0xD4602A,ash:0x6A6158};
+var TERRAIN_IDX={};TERRAIN_NAMES.forEach(function(n,i){TERRAIN_IDX[n]=i;});
+var MX=Math.max,MN=Math.min,MS=Math.sqrt,MP=Math.pow;
+
+function generateTerrain(seed,size,seaLevel,landmass){
+  size=size||64;seaLevel=seaLevel||0.5;landmass=landmass||"continents";
+  var total=size*size;
+  var n1=new SeedRandom(seed),n2=new SeedRandom(seed^5369127),n3=new SeedRandom(seed^3107467),n4=new SeedRandom(seed^7848403);
+  var height=new Float32Array(total),tmp=new Float32Array(total),rain=new Float32Array(total),terr=new Uint8Array(total),land=new Uint8Array(total);
+  var hm={pangaea:0.46,continents:0.34,islands:0.17,archipelago:0.10};
+  var base=hm[landmass]||0.34;
+  for(var y=0;y<size;y++){var ny=y/size;
+    for(var x=0;x<size;x++){var nx=x/size,idx=y*size+x;
+      var cx=nx-0.5,cy=ny-0.5,dst=MS(cx*cx+cy*cy)*2,dome=1-MP(MN(1,dst),3),e;
+      switch(landmass){case"pangaea":e=n1.fbm(nx*2.2,ny*2.2,4,2,0.5)*0.55+dome*0.45;break;case"islands":e=n1.fbm(nx*6.5,ny*6.5,5,2,0.5)*0.85+dome*0.15;break;case"archipelago":e=n1.fbm(nx*11,ny*11,6,2,0.5)*0.92+dome*0.08;break;default:e=n1.fbm(nx*3.2,ny*3.2,5,2,0.5)*0.72+dome*0.28;}
+      e+=(n2.fbm(nx*14,ny*14,5)-0.5)*0.16;e+=n2.rid(nx*8,ny*8,4)*MX(0,e-seaLevel)*0.85;
+      height[idx]=MX(0,MN(1,e));
+      tmp[idx]=n4.fbm(nx*6,ny*6,4)*0.5+0.5+0.2-0.4*MX(0,height[idx]-seaLevel);
+      rain[idx]=n3.fbm(nx*5+11,ny*5+7,5)*MX(0.1,1-height[idx]*0.6);
+    }
+  }
+  for(var i=0;i<total;i++){land[i]=(height[i]>seaLevel)?1:0;}
+  var landScale=MX(0.001,1-seaLevel);
+  for(var i=0;i<total;i++){var h=height[i],t=tmp[i],r=rain[i];
+    if(!land[i]){var depth=(seaLevel-h)/MX(0.001,seaLevel);
+      if(t<0.14)terr[i]=TERRAIN_IDX.ice;else if(depth>0.42)terr[i]=TERRAIN_IDX.deep;else if(depth>0.14)terr[i]=TERRAIN_IDX.ocean;else terr[i]=TERRAIN_IDX.shallow;}else{
+      var el=(h-seaLevel)/landScale;
+      if(el>0.78)terr[i]=t<0.3?TERRAIN_IDX.snow:TERRAIN_IDX.peak;
+      else if(el>0.58)terr[i]=TERRAIN_IDX.rock;
+      else if(el<0.035&&r<0.68)terr[i]=TERRAIN_IDX.beach;
+      else if(t<0.16)terr[i]=TERRAIN_IDX.snow;
+      else if(t<0.3)terr[i]=r>0.45?TERRAIN_IDX.taiga:TERRAIN_IDX.tundra;
+      else if(el<0.12&&r>0.78)terr[i]=TERRAIN_IDX.swamp;
+      else if(t>0.68){if(r<0.3)terr[i]=TERRAIN_IDX.desert;else if(r<0.55)terr[i]=TERRAIN_IDX.savanna;else terr[i]=TERRAIN_IDX.jungle;}
+      else{if(r<0.32)terr[i]=TERRAIN_IDX.steppe;else if(r<0.6)terr[i]=TERRAIN_IDX.grass;else terr[i]=TERRAIN_IDX.forest;}
+    }
+  }
+  return{size:size,height:height,tmp:tmp,rain:rain,terrain:terr,land:land,seaLevel:seaLevel};
+}
+
+function drawTerrainMap(g,w,px,py,tw,th,ts){
+  ts=ts||8;var sz=w.size;
+  for(var ty=0;ty<th;ty++){for(var tx=0;tx<tw;tx++){
+    var wx=px+tx,wy=py+ty;
+    if(wx<0||wy<0||wx>=sz||wy>=sz)continue;
+    var idx=wy*sz+wx,ti=w.terrain[idx],tn=TERRAIN_NAMES[ti],col=TERRAIN_COLORS[tn];
+    g.beginFill(col||0xFF00FF);g.drawRect(tx*ts,ty*ts,ts,ts);g.endFill();
+  }}
+}
 
 // ---- Pet Species Definitions ----
 const PET_SPECIES = {
-  cat: {
-    name: 'Cat', icon: '\uD83D\uDC31', baseColor: 0xe67e22, accentColor: 0xf4c542,
-    baseStats: { atk: 3, def: 2, spd: 6, hp: 40 },
-    evolutions: {
-      10: { name: 'Shadow Cat', icon: '\uD83D\uDC08\u200D\u2B1B', atk: 5, def: 3, spd: 8, hp: 70, color: 0x9b59b6 },
-      25: { name: 'Phantom Panther', icon: '\uD83D\uDC06', atk: 9, def: 6, spd: 12, hp: 130, color: 0x1a1a2e },
-      50: { name: 'Cosmic Lion', icon: '\uD83E\uDD81', atk: 15, def: 10, spd: 14, hp: 220, color: 0xf4c542 }
-    },
-    favoriteFood: 'fish',
-    draw: function(g, x, y, s, data) {
-      drawCat(g, x, y, s, data);
-    },
-    description: 'A playful feline companion. Quick and nimble.'
-  },
-  dog: {
-    name: 'Dog', icon: '\uD83D\uDC15', baseColor: 0x8B4513, accentColor: 0xD2691E,
-    baseStats: { atk: 5, def: 4, spd: 4, hp: 50 },
-    evolutions: {
-      10: { name: 'Guard Hound', icon: '\uD83D\uDC15\u200D\uD83D\uDEE1', atk: 7, def: 7, spd: 5, hp: 90, color: 0x0f3460 },
-      25: { name: 'Dire Wolf', icon: '\uD83D\uDC3A', atk: 12, def: 9, spd: 8, hp: 160, color: 0x7f8c8d },
-      50: { name: 'Celestial Cerberus', icon: '\uD83D\uDC3A\u200D\u2728', atk: 18, def: 14, spd: 11, hp: 280, color: 0xe94560 }
-    },
-    favoriteFood: 'bone',
-    draw: function(g, x, y, s, data) {
-      drawDog(g, x, y, s, data);
-    },
-    description: 'A loyal canine friend. Balanced and brave.'
-  },
-  dragon: {
-    name: 'Dragon', icon: '\uD83D\uDC09', baseColor: 0x2ecc71, accentColor: 0xf4c542,
-    baseStats: { atk: 8, def: 6, spd: 3, hp: 70 },
-    evolutions: {
-      10: { name: 'Fire Drake', icon: '\uD83D\uDC09\u200D\uD83D\uDD25', atk: 12, def: 8, spd: 5, hp: 110, color: 0xe94560 },
-      25: { name: 'Storm Wyrm', icon: '\uD83D\uDC32', atk: 18, def: 12, spd: 8, hp: 180, color: 0x533483 },
-      50: { name: 'Elder God Dragon', icon: '\uD83D\uDC09\u200D\u2728', atk: 28, def: 20, spd: 12, hp: 350, color: 0xf4c542 }
-    },
-    favoriteFood: 'gems',
-    draw: function(g, x, y, s, data) {
-      drawDragon(g, x, y, s, data);
-    },
-    description: 'A mighty dragon hatchling. Rare and powerful.'
-  },
-  bunny: {
-    name: 'Buny', icon: '\uD83D\uDC30', baseColor: 0xecf0f1, accentColor: 0xe91e63,
-    baseStats: { atk: 2, def: 1, spd: 8, hp: 30 },
-    evolutions: {
-      10: { name: 'Lucky Buny', icon: '\uD83D\uDC30\u200D\u2728', atk: 4, def: 3, spd: 11, hp: 55, color: 0x2ecc71 },
-      25: { name: 'Mystic Hare', icon: '\uD83D\uDC07', atk: 7, def: 5, spd: 15, hp: 100, color: 0x9b59b6 },
-      50: { name: 'Lunar Empress', icon: '\uD83D\uDC07\u200D\uD83D\uDC51', atk: 12, def: 9, spd: 20, hp: 180, color: 0xecf0f1 }
-    },
-    favoriteFood: 'carrot',
-    draw: function(g, x, y, s, data) {
-      drawBuny(g, x, y, s, data);
-    },
-    description: 'A swift buny companion. The fastest of all pets!'
-  },
-  fox: {
-    name: 'Fox', icon: '\uD83E\uDD8A', baseColor: 0xe67e22, accentColor: 0xecf0f1,
-    baseStats: { atk: 4, def: 3, spd: 7, hp: 45 },
-    evolutions: {
-      10: { name: 'Fire Fox', icon: '\uD83E\uDD8A\u200D\uD83D\uDD25', atk: 7, def: 5, spd: 9, hp: 75, color: 0xe94560 },
-      25: { name: 'Ninetales', icon: '\uD83E\uDD8A\u200D\u2728', atk: 11, def: 8, spd: 13, hp: 140, color: 0xf4c542 },
-      50: { name: 'Sprit Fox God', icon: '\uD83E\uDD8A\u200D\uD83D\uDC51', atk: 17, def: 13, spd: 18, hp: 240, color: 0x533483 }
-    },
-    favoriteFood: 'beries',
-    draw: function(g, x, y, s, data) {
-      drawFox(g, x, y, s, data);
-    },
-    description: 'A cunning fox. High speed and clever tricks.'
-  },
-  slime: {
-    name: 'Slime', icon: '\uD83E\uDDEA', baseColor: 0x2ecc71, accentColor: 0x27ae60,
-    baseStats: { atk: 1, def: 5, spd: 1, hp: 60 },
-    evolutions: {
-      10: { name: 'King Slime', icon: '\uD83E\uDDEA\u200D\uD83D\uDC51', atk: 3, def: 9, spd: 2, hp: 110, color: 0xf4c542 },
-      25: { name: 'Giant Slime', icon: '\uD83E\uDDEA\u200D\u2728', atk: 6, def: 15, spd: 4, hp: 200, color: 0xe94560 },
-      50: { name: 'Primal Ooze God', icon: '\uD83E\uDDEA\u200D\uD83D\uDC51', atk: 10, def: 25, spd: 6, hp: 380, color: 0x533483 }
-    },
-    favoriteFood: 'any',
-    draw: function(g, x, y, s, data) {
-      drawSlime(g, x, y, s, data);
-    },
-    description: 'A bouncy slime. Very high defense and HP!'
-  }
+flareHound:{nm:"FlareHond",ic:"\uD83D\uDD25",bc:0xFF6D3B,ac:0xFFF3E0,bs:{hp:42,atk:7,def:4,spd:6},sp:{1:{n:"Ember",pw:15,co:0},10:{n:"FireDash",pw:35,co:6},25:{n:"InfernoBurst",pw:70,co:15},50:{n:"SolarFlare",pw:140,co:28}},ev:{10:{nm:"BlazeFox",hp:75,atk:12,def:7,spd:10,clr:0xe94560},25:{nm:"InfernoHond",hp:135,atk:19,def:12,spd:14,clr:0xf4c542},50:{nm:"SolarGod",hp:240,atk:28,def:18,spd:18,clr:0xFF6D3B}},dc:"A fire fox with a blazing soul.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(4*s,5*s,8*s,7*s);g.endFill();g.beginFill(b);g.drawRect(5*s,0*s,6*s,6*s);g.endFill();g.beginFill(a);g.drawRect(6*s,2*s,4*s,4*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,3*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(3*s,0*s,2*s,1*s);g.drawRect(11*s,0*s,2*s,1*s);g.endFill();g.beginFill(a);g.drawRect(10*s,7*s,3*s,2*s);g.drawRect(11*s,9*s,2*s,4*s);g.endFill();g.beginFill(0xf4c542);g.drawRect(13*s,6*s,2*s,3*s);g.endFill();g.beginFill(b);g.drawRect(1*s,8*s,3*s,2*s);g.drawRect(12*s,8*s,2*s,1*s);g.drawRect(3*s,5*s,1*s,2*s);g.endFill();}
+},
+glacialWisp:{nm:"GlacialWisp",ic:"\u2744",bc:0x7EC8E3,ac:0xFFFFFF,bs:{hp:55,atk:4,def:7,spd:5},sp:{1:{n:"IceShard",pw:15,co:0},10:{n:"FrostShield",pw:35,co:6},25:{n:"Blizzard",pw:70,co:15},50:{n:"AbsoluteZero",pw:140,co:28}},ev:{10:{nm:"FrostSprit",hp:95,atk:8,def:12,spd:8,clr:0x00BCD4},25:{nm:"BlizzardLord",hp:170,atk:14,def:19,spd:12,clr:0x3498db},50:{nm:"AbsltZero",hp:300,atk:22,def:28,spd:16,clr:0xFFFFFF}},dc:"An ice spirit from the frozen wastes.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,6*s,6*s,7*s);g.endFill();g.beginFill(a);g.drawRect(6*s,2*s,4*s,5*s);g.drawRect(7*s,0*s,2*s,3*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,4*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(4*s,7*s,2*s,3*s);g.drawRect(10*s,7*s,2*s,3*s);g.endFill();g.beginFill(a);g.drawRect(3*s,9*s,1*s,2*s);g.drawRect(12*s,9*s,1*s,2*s);g.drawRect(7*s,13*s,2*s,1*s);g.endFill();g.beginFill(0x00BCD4);g.drawRect(5*s,11*s,1*s,2*s);g.drawRect(10*s,11*s,1*s,2*s);g.endFill();}
+},
+thunderClaw:{nm:"ThunderClaw",ic:"\u26A1",bc:0xF4C542,ac:0x533483,bs:{hp:45,atk:7,def:4,spd:8},sp:{1:{n:"Shock",pw:15,co:0},10:{n:"StormStrike",pw:35,co:6},25:{n:"LightningChain",pw:70,co:15},50:{n:"ThunderGod",pw:140,co:28}},ev:{10:{nm:"StormRaptr",hp:80,atk:12,def:7,spd:12,clr:0xe94560},25:{nm:"LightningClaw",hp:145,atk:19,def:12,spd:16,clr:0x533483},50:{nm:"ThunderGod",hp:250,atk:28,def:17,spd:22,clr:0xF4C542}},dc:"An electric raptor crackling with power.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,6*s,6*s,8*s);g.endFill();g.beginFill(a);g.drawRect(6*s,0*s,4*s,7*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(2*s,0*s,1*s,6*s);g.drawRect(13*s,0*s,1*s,6*s);g.endFill();g.beginFill(a);g.drawRect(1*s,2*s,1*s,3*s);g.drawRect(14*s,2*s,1*s,3*s);g.endFill();g.beginFill(b);g.drawRect(3*s,12*s,3*s,2*s);g.drawRect(10*s,12*s,3*s,2*s);g.endFill();g.beginFill(a);g.drawRect(4*s,14*s,2*s,2*s);g.drawRect(10*s,14*s,2*s,2*s);g.endFill();g.beginFill(0x9b59b6);g.drawRect(7*s,10*s,2*s,4*s);g.endFill();}
+},
+shadowMorph:{nm:"ShadowMorph",ic:"\uD83C\uDF11",bc:0x1a1a2e,ac:0x9b59b6,bs:{hp:52,atk:5,def:5,spd:6},sp:{1:{n:"DarkShift",pw:15,co:0},10:{n:"VoidSlash",pw:35,co:6},25:{n:"Eclipse",pw:70,co:15},50:{n:"AbyssalGate",pw:140,co:28}},ev:{10:{nm:"VoidShadr",hp:90,atk:9,def:9,spd:9,clr:0x533483},25:{nm:"EclipseForm",hp:160,atk:15,def:14,spd:13,clr:0x7f8c8d},50:{nm:"AbyssalLord",hp:280,atk:23,def:21,spd:17,clr:0x1a1a2e}},dc:"A void creature that shifts through shadows.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,4*s,6*s,8*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,5*s);g.endFill();g.beginFill(a);g.drawRect(7*s,3*s,2*s,3*s);g.endFill();g.beginFill(0xecf0f1);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(3*s,6*s,2*s,3*s);g.drawRect(11*s,6*s,2*s,3*s);g.endFill();g.beginFill(a);g.drawRect(2*s,8*s,1*s,4*s);g.drawRect(13*s,8*s,1*s,4*s);g.endFill();g.beginFill(b);g.drawRect(4*s,12*s,8*s,2*s);g.endFill();g.beginFill(a);g.drawRect(6*s,12*s,1*s,1*s);g.drawRect(9*s,12*s,1*s,1*s);g.endFill();}
+},
+terraGolem:{nm:"TerraGolem",ic:"\uD83E\uDEA8",bc:0x8A8173,ac:0x6B5B4F,bs:{hp:70,atk:5,def:8,spd:2},sp:{1:{n:"StoneWall",pw:15,co:0},10:{n:"BoulderToss",pw:35,co:6},25:{n:"Earthquake",pw:70,co:15},50:{n:"MountainEarth",pw:140,co:28}},ev:{10:{nm:"StoneGolem",hp:120,atk:9,def:14,spd:4,clr:0x7f8c8d},25:{nm:"IronGolem",hp:210,atk:15,def:21,spd:7,clr:0x95a5a6},50:{nm:"TitanGolem",hp:370,atk:23,def:30,spd:10,clr:0x8A8173}},dc:"An ancient earth golem, slow but unbreakable.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(4*s,2*s,8*s,12*s);g.endFill();g.beginFill(a);g.drawRect(5*s,0*s,6*s,3*s);g.endFill();g.beginFill(0xecf0f1);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(2*s,4*s,2*s,3*s);g.drawRect(12*s,4*s,2*s,3*s);g.endFill();g.beginFill(a);g.drawRect(1*s,5*s,1*s,2*s);g.drawRect(14*s,5*s,1*s,2*s);g.endFill();g.beginFill(b);g.drawRect(3*s,14*s,10*s,2*s);g.drawRect(4*s,12*s,1*s,2*s);g.drawRect(11*s,12*s,1*s,2*s);g.endFill();g.beginFill(0xD4C4A0);g.drawRect(6*s,5*s,4*s,2*s);g.endFill();}
+},
+venomQuil:{nm:"VenomQuil",ic:"\uD83E\uDD94",bc:0x9b59b6,ac:0x2ecc71,bs:{hp:48,atk:4,def:6,spd:4},sp:{1:{n:"ToxicSpikes",pw:15,co:0},10:{n:"VenomBite",pw:35,co:6},25:{n:"AcidRain",pw:70,co:15},50:{n:"PlagueBurst",pw:140,co:28}},ev:{10:{nm:"ToxicQuil",hp:85,atk:8,def:10,spd:7,clr:0x2ecc71},25:{nm:"VenomLord",hp:150,atk:14,def:16,spd:11,clr:0x27ae60},50:{nm:"PlagueBringr",hp:260,atk:22,def:24,spd:15,clr:0x9b59b6}},dc:"A toxic hedgehog bristling with venomous quills.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,4*s,6*s,6*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,5*s);g.endFill();g.beginFill(a);g.drawRect(7*s,3*s,2*s,2*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(a);g.drawRect(4*s,2*s,1*s,3*s);g.drawRect(11*s,2*s,1*s,3*s);g.drawRect(3*s,3*s,1*s,2*s);g.drawRect(12*s,3*s,1*s,2*s);g.endFill();g.beginFill(b);g.drawRect(4*s,10*s,8*s,2*s);g.endFill();g.beginFill(a);g.drawRect(5*s,10*s,1*s,2*s);g.drawRect(6*s,12*s,1*s,3*s);g.drawRect(9*s,12*s,1*s,3*s);g.drawRect(10*s,10*s,1*s,2*s);g.endFill();}
+},
+astralWyrm:{nm:"AstralWyrm",ic:"\uD83C\uDF0C",bc:0x533483,ac:0xf4c542,bs:{hp:48,atk:9,def:3,spd:5},sp:{1:{n:"StarShard",pw:15,co:0},10:{n:"CosmicRay",pw:35,co:6},25:{n:"MeteorStorm",pw:70,co:15},50:{n:"Supernova",pw:140,co:28}},ev:{10:{nm:"StarWyrm",hp:85,atk:15,def:6,spd:8,clr:0x9b59b6},25:{nm:"NovaDrake",hp:150,atk:23,def:10,spd:12,clr:0xe94560},50:{nm:"CosmicSerpnt",hp:270,atk:33,def:16,spd:16,clr:0xf4c542}},dc:"A cosmic serpent born among the stars.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(3*s,6*s,10*s,4*s);g.endFill();g.beginFill(b);g.drawRect(2*s,8*s,12*s,3*s);g.endFill();g.beginFill(b);g.drawRect(5*s,0*s,6*s,7*s);g.endFill();g.beginFill(a);g.drawRect(6*s,2*s,4*s,4*s);g.endFill();g.beginFill(0xecf0f1);g.drawRect(7*s,3*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFill();g.beginFill(a);g.drawRect(0*s,9*s,2*s,1*s);g.drawRect(14*s,9*s,2*s,1*s);g.drawRect(1*s,10*s,1*s,1*s);g.drawRect(15*s,10*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(7*s,10*s,2*s,3*s);g.endFill();g.beginFill(a);g.drawRect(7*s,13*s,1*s,2*s);g.drawRect(9*s,13*s,1*s,2*s);g.endFill();}
+},
+bloomKnig:{nm:"BloomKnig",ic:"\uD83C\uDF3B",bc:0x2ecc71,ac:0xe67e22,bs:{hp:50,atk:6,def:6,spd:5},sp:{1:{n:"VineWhip",pw:15,co:0},10:{n:"RootTrap",pw:35,co:6},25:{n:"PetalStorm",pw:70,co:15},50:{n:"AncientForest",pw:140,co:28}},ev:{10:{nm:"ForestGuard",hp:90,atk:10,def:10,spd:8,clr:0x27ae60},25:{nm:"ThornKnight",hp:160,atk:17,def:16,spd:12,clr:0xe67e22},50:{nm:"ForestKing",hp:280,atk:26,def:24,spd:16,clr:0x2ecc71}},dc:"A plant warrior sprouting from ancient forests.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,6*s,6*s,8*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,7*s);g.endFill();g.beginFill(a);g.drawRect(7*s,2*s,2*s,4*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(a);g.drawRect(4*s,0*s,1*s,5*s);g.drawRect(11*s,0*s,1*s,5*s);g.endFill();g.beginFill(b);g.drawRect(2*s,8*s,3*s,2*s);g.drawRect(11*s,8*s,3*s,2*s);g.endFill();g.beginFill(a);g.drawRect(1*s,7*s,1*s,3*s);g.drawRect(14*s,7*s,1*s,3*s);g.endFill();g.beginFill(b);g.drawRect(5*s,14*s,6*s,1*s);g.endFill();}
+},
+aquaRidr:{nm:"AquaRidr",ic:"\uD83C\uDF0A",bc:0x3498db,ac:0xecf0f1,bs:{hp:52,atk:5,def:4,spd:7},sp:{1:{n:"Splash",pw:15,co:0},10:{n:"TidalWave",pw:35,co:6},25:{n:"Whirlpool",pw:70,co:15},50:{n:"OceanFury",pw:140,co:28}},ev:{10:{nm:"WaveRider",hp:90,atk:9,def:7,spd:11,clr:0x00BCD4},25:{nm:"TidalSteed",hp:160,atk:15,def:12,spd:15,clr:0x7EC8E3},50:{nm:"OceanLord",hp:280,atk:23,def:18,spd:20,clr:0xecf0f1}},dc:"A majestic water horse galloping across waves.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(4*s,5*s,8*s,7*s);g.endFill();g.beginFill(b);g.drawRect(3*s,0*s,10*s,6*s);g.endFill();g.beginFill(a);g.drawRect(5*s,2*s,6*s,4*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(1*s,3*s,2*s,2*s);g.drawRect(13*s,3*s,2*s,2*s);g.endFill();g.beginFill(a);g.drawRect(10*s,7*s,4*s,2*s);g.drawRect(11*s,9*s,3*s,3*s);g.endFill();g.beginFill(b);g.drawRect(0*s,6*s,4*s,2*s);g.drawRect(12*s,6*s,2*s,2*s);g.endFill();g.beginFill(a);g.drawRect(8*s,12*s,2*s,2*s);g.endFill();}
+},
+emberWing:{nm:"EmberWing",ic:"\uD83D\uDD25",bc:0xe67e22,ac:0xf4c542,bs:{hp:48,atk:6,def:4,spd:5},sp:{1:{n:"Rebirth",pw:15,co:0},10:{n:"FireWing",pw:35,co:6},25:{n:"HeatWave",pw:70,co:15},50:{n:"PhoenixRise",pw:140,co:28}},ev:{10:{nm:"FlameWing",hp:85,atk:10,def:7,spd:8,clr:0xf4c542},25:{nm:"EmberPheonix",hp:150,atk:17,def:12,spd:12,clr:0xe94560},50:{nm:"PheonixGod",hp:270,atk:26,def:18,spd:16,clr:0xe67e22}},dc:"A newborn phoenix chick with ember wings.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,5*s,6*s,5*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,6*s);g.endFill();g.beginFill(a);g.drawRect(7*s,2*s,2*s,4*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(a);g.drawRect(3*s,0*s,3*s,2*s);g.drawRect(10*s,0*s,3*s,2*s);g.endFill();g.beginFill(0xe94560);g.drawRect(2*s,2*s,4*s,1*s);g.drawRect(10*s,2*s,4*s,1*s);g.endFill();g.beginFill(b);g.drawRect(0*s,3*s,1*s,4*s);g.drawRect(15*s,3*s,1*s,4*s);g.endFill();g.beginFill(a);g.drawRect(10*s,6*s,3*s,2*s);g.endFill();g.beginFill(b);g.drawRect(5*s,10*s,6*s,2*s);g.endFill();g.beginFill(a);g.drawRect(7*s,10*s,1*s,2*s);g.drawRect(8*s,12*s,1*s,2*s);g.drawRect(9*s,10*s,1*s,2*s);g.endFill();}
+},
+crystalMoth:{nm:"CrystalMoth",ic:"\uD83E\uDDBF",bc:0x00BCD4,ac:0xEC407A,bs:{hp:45,atk:6,def:5,spd:7},sp:{1:{n:"PrismBeam",pw:15,co:0},10:{n:"CrystalCage",pw:35,co:6},25:{n:"Refract",pw:70,co:15},50:{n:"SpectrumBurst",pw:140,co:28}},ev:{10:{nm:"PrismMoth",hp:80,atk:10,def:9,spd:11,clr:0x9b59b6},25:{nm:"CrystalWing",hp:145,atk:17,def:15,spd:15,clr:0x533483},50:{nm:"SpectrumLord",hp:250,atk:25,def:22,spd:20,clr:0x00BCD4}},dc:"A crystalline prism insect refracting light.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,5*s,6*s,5*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,6*s);g.endFill();g.beginFill(a);g.drawRect(7*s,2*s,2*s,4*s);g.endFill();g.beginFill(0x1a1a2e);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(a);g.drawRect(2*s,4*s,3*s,2*s);g.drawRect(11*s,4*s,3*s,2*s);g.endFill();g.beginFill(0x533483);g.drawRect(0*s,5*s,5*s,1*s);g.drawRect(11*s,5*s,5*s,1*s);g.endFill();g.beginFill(b);g.drawRect(3*s,10*s,10*s,2*s);g.endFill();g.beginFill(a);g.drawRect(4*s,10*s,1*s,2*s);g.drawRect(5*s,12*s,1*s,3*s);g.drawRect(10*s,12*s,1*s,3*s);g.drawRect(11*s,10*s,1*s,2*s);g.endFill();}
+},
+voidWalkr:{nm:"VoidWalkr",ic:"\uD83C\uDF0C",bc:0x1a1a2e,ac:0x533483,bs:{hp:46,atk:7,def:4,spd:7},sp:{1:{n:"Portal",pw:15,co:0},10:{n:"Warp",pw:35,co:6},25:{n:"DimensionSlash",pw:70,co:15},50:{n:"RealityBreak",pw:140,co:28}},ev:{10:{nm:"RiftWalker",hp:82,atk:12,def:7,spd:11,clr:0x9b59b6},25:{nm:"DimensionLord",hp:148,atk:19,def:12,spd:15,clr:0x7f8c8d},50:{nm:"VoidOverlord",hp:260,atk:28,def:18,spd:20,clr:0x1a1a2e}},dc:"A dimensional pet that walks between realities.",draw:function(g,s,f,se){var b=this.bc,a=this.ac;g.beginFill(b);g.drawRect(5*s,4*s,6*s,6*s);g.endFill();g.beginFill(b);g.drawRect(6*s,0*s,4*s,5*s);g.endFill();g.beginFill(a);g.drawRect(7*s,2*s,2*s,4*s);g.endFill();g.beginFill(0xecf0f1);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFill();g.beginFill(b);g.drawRect(2*s,6*s,3*s,2*s);g.drawRect(11*s,6*s,3*s,2*s);g.endFill();g.beginFill(a);g.drawRect(0*s,5*s,2*s,3*s);g.drawRect(14*s,5*s,2*s,3*s);g.endFill();g.beginFill(b);g.drawRect(4*s,10*s,8*s,2*s);g.endFill();g.beginFill(a);g.drawRect(5*s,12*s,1*s,2*s);g.drawRect(10*s,12*s,1*s,2*s);g.endFill();g.beginFill(0x9b59b6);g.drawRect(6*s,10*s,1*s,1*s);g.drawRect(9*s,10*s,1*s,1*s);g.endFill();}
+}
 };
 
 // ---- Pet Creation ----
@@ -824,22 +821,22 @@ function createPet(species, name) {
   const pet = {
     id: id,
     species: species,
-    name: name || spec.name,
+    name: name || spec.nm,
     level: 1,
     xp: 0,
     hunger: 80,
     happy: 80,
     energy: 80,
-    health: spec.baseStats.hp,
-    maxHealth: spec.baseStats.hp,
-    atk: spec.baseStats.atk,
-    def: spec.baseStats.def,
-    spd: spec.baseStats.spd,
+    health: spec.bs.hp,
+    maxHealth: spec.bs.hp,
+    atk: spec.bs.atk,
+    def: spec.bs.def,
+    spd: spec.bs.spd,
     bond: 0,
     breedCount: 0,
     evolutionStage: 0,
-    color: spec.baseColor,
-    accentColor: spec.accentColor,
+    color: spec.bc,
+    accentColor: spec.ac,
     shiny: Math.random() < 0.01,
     createdDay: GS.day,
     equips: {},
@@ -881,7 +878,7 @@ function checkLevelUp(pet) {
     checkAchievements('pet_level', pet);
     // Check evolution
     const spec = PET_SPECIES[pet.species];
-    const evos = spec.evolutions;
+    const evos = spec.ev;
     for (const lv in evos) {
       if (pet.level >= parseInt(lv) && pet.evolutionStage < parseInt(lv)) {
         applyEvoluton(pet, evos[lv], lv);
@@ -893,13 +890,13 @@ function checkLevelUp(pet) {
 
 function applyEvoluton(pet, evo, stageLv) {
   pet.evolutionStage = stageLv;
-  pet.name = evo.name + (pet.shiny ? ' \u2728' : '');
+  pet.name = evo.nm + (pet.shiny ? ' \u2728' : '');
   pet.atk = evo.atk;
   pet.def = evo.def;
   pet.spd = evo.spd;
   pet.maxHealth = evo.hp;
   pet.health = evo.hp;
-  pet.color = evo.color;
+  pet.color = evo.clr;
   SFX.evolve();
   notify('\u2728 ' + pet.name + ' evolved!', 5);
 }
@@ -1571,7 +1568,7 @@ function harvestPlot(plotIdx) {
   GS.gardenPlots[plotIdx].plant = null;
   GS.gardenHarvests++;
   SFX.coin();
-  notify('Harvested ' + spec.name + '! +' + spec.reward + ' coins + ' + spec.yield + ' treats');
+  notify('Harvested ' + spec.nm + '! +' + spec.reward + ' coins + ' + spec.yield + ' treats');
   updateCurrncyDisplay();
   updateQuestProgess('harves');
 }
@@ -2015,9 +2012,9 @@ function showPetCreation() {
   for (const [key, spec] of Object.entries(PET_SPECIES)) {
     const div = document.createElement('div');
     div.style.cssText = 'cursor:pointer;text-align:center;padding:8px;border:1px solid var(--purple);border-radius:8px;width:80px;';
-    div.innerHTML = '<div style="font-size:32px">' + spec.icon + '</div><div style="font-size:10px">' + spec.name + '</div>';
+    div.innerHTML = '<div style="font-size:32px">' + spec.ic + '</div><div style="font-size:10px">' + spec.nm + '</div>';
     div.onclick = function() {
-      const name = prompt('Name your ' + spec.name + ':', spec.name);
+      const name = prompt('Name your ' + spec.nm + ':', spec.nm);
       if (name) {
         const pet = createPet(key, name);
         document.getElementById('pet-creation').style.display = 'none';
@@ -2174,13 +2171,15 @@ function initPixi() {
 }
 
 // ---- Procedural Pet Drawing ----
-function drawPet(g, x, y, scale, petData) {
+function drawPet(g, x, y, s, petData) {
   if (!petData) return;
-  const spec = PET_SPECIES[petData.species];
+  var spec = PET_SPECIES[petData.species];
   if (spec && spec.draw) {
-    spec.draw(g, x, y, scale, petData);
+    g.setTransform(1,0,0,1,x,y);
+    spec.draw(g, s, 0, 0);
+    g.setTransform(1,0,0,1,0,0);
   } else {
-    drawDefaultPet(g, x, y, scale, petData);
+    drawDefaultPet(g, x, y, s, petData);
   }
 }
 
@@ -22583,7 +22582,7 @@ function renderGardenPanel() {
     if (plot.plant) {
       const spec = GARDEN_PLANTS[plot.plant.type];
       if (plot.plant.ready) {
-        html += '<div style="font-size:20px;cursor:pointer" onclick="harvestPlot('+i+');renderGardenPanel()">' + spec.icon + '</div>';
+        html += '<div style="font-size:20px;cursor:pointer" onclick="harvestPlot('+i+');renderGardenPanel()">' + spec.ic + '</div>';
         html += '<div style="font-size:8px;color:var(--green)">READY!</div>';
       } else {
         html += '<div style="font-size:16px">\uD83C\uDF31</div>';
@@ -23039,9 +23038,9 @@ function updatePetUI() {
     return;
   }
   const spec = PET_SPECIES[pet.species];
-  document.getElementById('pet-name-display').textContent = spec.icon + ' ' + pet.name;
+  document.getElementById('pet-name-display').textContent = spec.ic + ' ' + pet.name;
   document.getElementById('pet-leve').textContent = pet.level;
-  document.getElementById('pet-species').textContent = spec.name;
+  document.getElementById('pet-species').textContent = spec.nm;
   
   document.getElementById('hunger-val').textContent = Math.floor(pet.hunger) + '/100';
   document.getElementById('hunger-fill').style.width = pet.hunger + '%';
