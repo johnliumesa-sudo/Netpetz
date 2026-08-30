@@ -728,94 +728,129 @@ function gameTick() {
   updateCurrencyDisplay();
 }
 
-// ---- Pet Species Definitions ----
+// ═══ SeedRom - hash noise ═══
+function h(x,y,z){var r=Math.imul(x,668265261)^Math.imul(y,374761393)^Math.imul(z,2654435769);r=Math.imul(r^r>>>15,2246822507);r=Math.imul(r^r>>>13,3266489909);return((r^r>>>16)>>>0)/4294967296;}
+var s=function(t){return t*t*(3-2*t);};
+var SR=function(se){this.se=se|0;};
+SR.prototype.at=function(x,y){var fx=Math.floor(x),fy=Math.floor(y),sx=s(x-fx),sy=s(y-fy);var a=h(fx,fy,this.se),b=h(fx+1,fy,this.se),c=h(fx,fy+1,this.se),d=h(fx+1,fy+1,this.se);return(a*(1-sx)+b*sx)*(1-sy)+(c*(1-sx)+d*sx)*sy;};
+SR.prototype.fbm=function(x,y,o,lc,g){o=o||5;lc=lc||2;g=g||0.5;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){v+=this.at(px,py)*a;m+=a;a*=g;px*=lc;py*=lc;}return v/m;};
+SR.prototype.rdg=function(x,y,o){o=o||4;var v=0,m=0,a=1,px=x,py=y;for(var i=0;i<o;i++){var n=1-Math.abs(this.at(px,py)*2-1);v+=n*n*a;m+=a;a*=0.5;px*=2;py*=2;}return v/m;};// ---- Pet Species Definitions ----
 const PET_SPECIES = {
-  cat: {
-    name: 'Cat', icon: '\uD83D\uDC31', baseColor: 0xe67e22, accentColor: 0xf4c542,
-    baseStats: { atk: 3, def: 2, spd: 6, hp: 40 },
-    evolutions: {
-      10: { name: 'Shadow Cat', icon: '\uD83D\uDC08\u200D\u2B1B', atk: 5, def: 3, spd: 8, hp: 70, color: 0x9b59b6 },
-      25: { name: 'Phantom Panther', icon: '\uD83D\uDC06', atk: 9, def: 6, spd: 12, hp: 130, color: 0x1a1a2e },
-      50: { name: 'Cosmic Lion', icon: '\uD83E\uDD81', atk: 15, def: 10, spd: 14, hp: 220, color: 0xf4c542 }
-    },
-    favoriteFood: 'fish',
-    draw: function(g, x, y, s, data) {
-      drawCat(g, x, y, s, data);
-    },
-    description: 'A playful feline companion. Quick and nimble.'
-  },
-  dog: {
-    name: 'Dog', icon: '\uD83D\uDC15', baseColor: 0x8B4513, accentColor: 0xD2691E,
-    baseStats: { atk: 5, def: 4, spd: 4, hp: 50 },
-    evolutions: {
-      10: { name: 'Guard Hound', icon: '\uD83D\uDC15\u200D\uD83D\uDEE1', atk: 7, def: 7, spd: 5, hp: 90, color: 0x0f3460 },
-      25: { name: 'Dire Wolf', icon: '\uD83D\uDC3A', atk: 12, def: 9, spd: 8, hp: 160, color: 0x7f8c8d },
-      50: { name: 'Celestial Cerberus', icon: '\uD83D\uDC3A\u200D\u2728', atk: 18, def: 14, spd: 11, hp: 280, color: 0xe94560 }
-    },
-    favoriteFood: 'bone',
-    draw: function(g, x, y, s, data) {
-      drawDog(g, x, y, s, data);
-    },
-    description: 'A loyal canine friend. Balanced and brave.'
-  },
-  dragon: {
-    name: 'Dragon', icon: '\uD83D\uDC09', baseColor: 0x2ecc71, accentColor: 0xf4c542,
-    baseStats: { atk: 8, def: 6, spd: 3, hp: 70 },
-    evolutions: {
-      10: { name: 'Fire Drake', icon: '\uD83D\uDC09\u200D\uD83D\uDD25', atk: 12, def: 8, spd: 5, hp: 110, color: 0xe94560 },
-      25: { name: 'Storm Wyrm', icon: '\uD83D\uDC32', atk: 18, def: 12, spd: 8, hp: 180, color: 0x533483 },
-      50: { name: 'Elder God Dragon', icon: '\uD83D\uDC09\u200D\u2728', atk: 28, def: 20, spd: 12, hp: 350, color: 0xf4c542 }
-    },
-    favoriteFood: 'gems',
-    draw: function(g, x, y, s, data) {
-      drawDragon(g, x, y, s, data);
-    },
-    description: 'A mighty dragon hatchling. Rare and powerful.'
-  },
-  bunny: {
-    name: 'Buny', icon: '\uD83D\uDC30', baseColor: 0xecf0f1, accentColor: 0xe91e63,
-    baseStats: { atk: 2, def: 1, spd: 8, hp: 30 },
-    evolutions: {
-      10: { name: 'Lucky Buny', icon: '\uD83D\uDC30\u200D\u2728', atk: 4, def: 3, spd: 11, hp: 55, color: 0x2ecc71 },
-      25: { name: 'Mystic Hare', icon: '\uD83D\uDC07', atk: 7, def: 5, spd: 15, hp: 100, color: 0x9b59b6 },
-      50: { name: 'Lunar Empress', icon: '\uD83D\uDC07\u200D\uD83D\uDC51', atk: 12, def: 9, spd: 20, hp: 180, color: 0xecf0f1 }
-    },
-    favoriteFood: 'carrot',
-    draw: function(g, x, y, s, data) {
-      drawBuny(g, x, y, s, data);
-    },
-    description: 'A swift buny companion. The fastest of all pets!'
-  },
-  fox: {
-    name: 'Fox', icon: '\uD83E\uDD8A', baseColor: 0xe67e22, accentColor: 0xecf0f1,
-    baseStats: { atk: 4, def: 3, spd: 7, hp: 45 },
-    evolutions: {
-      10: { name: 'Fire Fox', icon: '\uD83E\uDD8A\u200D\uD83D\uDD25', atk: 7, def: 5, spd: 9, hp: 75, color: 0xe94560 },
-      25: { name: 'Ninetales', icon: '\uD83E\uDD8A\u200D\u2728', atk: 11, def: 8, spd: 13, hp: 140, color: 0xf4c542 },
-      50: { name: 'Sprit Fox God', icon: '\uD83E\uDD8A\u200D\uD83D\uDC51', atk: 17, def: 13, spd: 18, hp: 240, color: 0x533483 }
-    },
-    favoriteFood: 'beries',
-    draw: function(g, x, y, s, data) {
-      drawFox(g, x, y, s, data);
-    },
-    description: 'A cunning fox. High speed and clever tricks.'
-  },
-  slime: {
-    name: 'Slime', icon: '\uD83E\uDDEA', baseColor: 0x2ecc71, accentColor: 0x27ae60,
-    baseStats: { atk: 1, def: 5, spd: 1, hp: 60 },
-    evolutions: {
-      10: { name: 'King Slime', icon: '\uD83E\uDDEA\u200D\uD83D\uDC51', atk: 3, def: 9, spd: 2, hp: 110, color: 0xf4c542 },
-      25: { name: 'Giant Slime', icon: '\uD83E\uDDEA\u200D\u2728', atk: 6, def: 15, spd: 4, hp: 200, color: 0xe94560 },
-      50: { name: 'Primal Ooze God', icon: '\uD83E\uDDEA\u200D\uD83D\uDC51', atk: 10, def: 25, spd: 6, hp: 380, color: 0x533483 }
-    },
-    favoriteFood: 'any',
-    draw: function(g, x, y, s, data) {
-      drawSlime(g, x, y, s, data);
-    },
-    description: 'A bouncy slime. Very high defense and HP!'
+flr:{nm:"FlareHound",ic:"\uD83D\uDD25",bc:0xFF6B3B,ac:0xFFF3E0,
+ bs:{hp:42,atk:7,def:4,spd:6},
+ sp:{1:{n:"Ember",pw:15,co:0},10:{n:"FireDash",pw:35,co:8},25:{n:"InfernoBrst",pw:75,co:20},50:{n:"SolaFlare",pw:150,co:35}},
+ ev:{10:{nm:"BlazeHound",atk:11,def:8,spd:9,hp:82,clr:0xFF5722},
+  25:{nm:"InfernoHound",atk:18,def:14,spd:13,hp:152,clr:0xD44230},
+  50:{nm:"SolaFlareHound",atk:28,def:22,spd:18,hp:280,clr:0xFFAB40}},
+ dc:"Fire fox with flme trail. Fst atacker!"
+},
+glw:{nm:"GlacalWisp",ic:"\u2744",bc:0x7EC8E3,ac:0xFFFFFF,
+ bs:{hp:55,atk:4,def:7,spd:5},
+ sp:{1:{n:"IceShard",pw:15,co:0},10:{n:"FrostShield",pw:30,co:7},25:{n:"Blizard",pw:65,co:18},50:{n:"AbsluteZero",pw:130,co:30}},
+ ev:{10:{nm:"FrostWisp",atk:8,def:11,spd:8,hp:95,clr:0x9ADEF},
+  25:{nm:"BlzardWisp",atk:14,def:18,spd:12,hp:175,clr:0xB3E5FC},
+  50:{nm:"ArticWisp",atk:22,def:28,spd:17,hp:320,clr:0xF4F9FD}},
+ dc:"Ice spirit. Tanky with frost shields!"
+},
+thc:{nm:"ThundrClaw",ic:"\u26A1",bc:0xF4C542,ac:0x533483,
+ bs:{hp:45,atk:7,def:4,spd:8},
+ sp:{1:{n:"Shock",pw:15,co:0},10:{n:"StomStrike",pw:38,co:9},25:{n:"LightngChain",pw:78,co:22},50:{n:"ThundrGod",pw:155,co:38}},
+ ev:{10:{nm:"StomClaw",atk:11,def:8,spd:12,hp:85,clr:0xFFD600},
+  25:{nm:"TempstClaw",atk:18,def:14,spd:17,hp:155,clr:0xFFEA00},
+  50:{nm:"ThundrGodClaw",atk:28,def:22,spd:24,hp:280,clr:0xFFFF8D}},
+ dc:"Electric raptr. Fastest pet!"
+},
+shm:{nm:"ShadoMoph",ic:"\uD83C\uDF19",bc:0x1a1a2e,ac:0x9b59b6,
+ bs:{hp:52,atk:5,def:5,spd:6},
+ sp:{1:{n:"DarkShift",pw:15,co:0},10:{n:"VoidSlah",pw:32,co:8},25:{n:"Eclpse",pw:68,co:19},50:{n:"AbyssalGat",pw:138,co:32}},
+ ev:{10:{nm:"NightMoph",atk:9,def:9,spd:10,hp:92,clr:0x2D2D44},
+  25:{nm:"VoidMoph",atk:16,def:16,spd:14,hp:172,clr:0x4A148C},
+  50:{nm:"AbyssalMoph",atk:25,def:24,spd:20,hp:310,clr:0x9C27B0}},
+ dc:"Void crature that phases through dmensions."
+},
+trg:{nm:"TeraGolem",ic:"\uD83D\uDDFB",bc:0x8A8173,ac:0x6B5B4F,
+ bs:{hp:70,atk:5,def:8,spd:2},
+ sp:{1:{n:"StoneWall",pw:12,co:0},10:{n:"BolderToss",pw:30,co:7},25:{n:"Eathquake",pw:62,co:17},50:{n:"MountainWath",pw:125,co:28}},
+ ev:{10:{nm:"StoneGolem",atk:9,def:13,spd:4,hp:120,clr:0x9E9E9E},
+  25:{nm:"IronGolem",atk:15,def:20,spd:7,hp:210,clr:0x607D8B},
+  50:{nm:"DiamondGolem",atk:24,def:32,spd:11,hp:380,clr:0xB0BEC5}},
+ dc:"Eath golem. Highest defnse!"
+},
+vnq:{nm:"VenomQuil",ic:"\uD83E\uDEA7",bc:0x9b59b6,ac:0x2ecc71,
+ bs:{hp:48,atk:4,def:6,spd:4},
+ sp:{1:{n:"ToxicSpkes",pw:16,co:0},10:{n:"VenomBite",pw:34,co:9},25:{n:"AcidRain",pw:72,co:20},50:{n:"PlaueBust",pw:145,co:34}},
+ ev:{10:{nm:"SpikeQuil",atk:8,def:10,spd:7,hp:88,clr:0x7B1FA2},
+  25:{nm:"ToxinQuil",atk:14,def:17,spd:11,hp:168,clr:0x4CAF50},
+  50:{nm:"PlaueQuil",atk:23,def:26,spd:16,hp:300,clr:0x76FF03}},
+ dc:"Toxic hedghog. DOT daamge specialist!"},
+asw:{nm:"AstalWyrm",ic:"\uD83C\uDF0C",bc:0x533483,ac:0xf4c542,
+ bs:{hp:48,atk:9,def:3,spd:5},
+ sp:{1:{n:"StarShard",pw:18,co:0},10:{n:"CosmicRay",pw:42,co:10},25:{n:"MeteorStrm",pw:85,co:24},50:{n:"Supernova",pw:170,co:42}},
+ ev:{10:{nm:"StarWyrm",atk:14,def:7,spd:8,hp:88,clr:0x7C4DFF},
+  25:{nm:"GalaxyWyrm",atk:22,def:13,spd:12,hp:168,clr:0xE040FB},
+  50:{nm:"CosmicWyrm",atk:34,def:20,spd:18,hp:300,clr:0xFFD740}},
+ dc:"Cosmic seprent. Higest atack power!"},
+blk:{nm:"BlomKnight",ic:"\uD83C\uDF3A",bc:0x2ecc71,ac:0xe67e22,
+ bs:{hp:50,atk:6,def:6,spd:5},
+ sp:{1:{n:"VineWhip",pw:14,co:0},10:{n:"RootTap",pw:32,co:8},25:{n:"PetalStrm",pw:66,co:18},50:{n:"AncentForest",pw:132,co:30}},
+ ev:{10:{nm:"ThonKnight",atk:10,def:10,spd:8,hp:90,clr:0x4CAF50},
+  25:{nm:"ForestKnight",atk:17,def:17,spd:12,hp:170,clr:0x33691E},
+  50:{nm:"GaiaKnight",atk:26,def:26,spd:18,hp:310,clr:0xB9F6CA}},
+ dc:"Plent warror. Balnced defender!"},
+aqr:{nm:"AquaRider",ic:"\uD83C\uDF0A",bc:0x3498db,ac:0xecf0f1,
+ bs:{hp:52,atk:5,def:4,spd:7},
+ sp:{1:{n:"Splash",pw:14,co:0},10:{n:"TidalWave",pw:33,co:8},25:{n:"Whirpool",pw:70,co:19},50:{n:"OceanFury",pw:140,co:32}},
+ ev:{10:{nm:"WaveRider",atk:9,def:8,spd:11,hp:92,clr:0x1565C0},
+  25:{nm:"StomRider",atk:15,def:14,spd:16,hp:172,clr:0x0277BD},
+  50:{nm:"TsunamiRider",atk:24,def:22,spd:22,hp:310,clr:0xE1F5FE}},
+ dc:"Water hose. Swift swimer!"},
+emw:{nm:"EmberWing",ic:"\uD83D\uDD25",bc:0xe67e22,ac:0xf4c542,
+ bs:{hp:48,atk:6,def:4,spd:5},
+ sp:{1:{n:"Rebith",pw:16,co:0},10:{n:"FireWing",pw:36,co:9},25:{n:"HatWave",pw:74,co:21},50:{n:"PhoenixRise",pw:150,co:36}},
+ ev:{10:{nm:"BlazeWing",atk:10,def:8,spd:8,hp:88,clr:0xE65100},
+  25:{nm:"InfernoWing",atk:17,def:14,spd:12,hp:168,clr:0xFF3D00},
+  50:{nm:"PhoenixKing",atk:26,def:22,spd:18,hp:300,clr:0xFFD600}},
+ dc:"Baby phoenix. Rebirths in battle!"},
+crm:{nm:"CrystalMoth",ic:"\uD83E\uDEB2",bc:0x00BCD4,ac:0xEC407A,
+ bs:{hp:45,atk:6,def:5,spd:7},
+ sp:{1:{n:"PrisBeam",pw:15,co:0},10:{n:"CrystalCage",pw:34,co:8},25:{n:"Refract",pw:68,co:19},50:{n:"SpectrumBurst",pw:136,co:32}},
+ ev:{10:{nm:"PrisMoth",atk:10,def:9,spd:11,hp:85,clr:0x4DD0E1},
+  25:{nm:"RaibowMoth",atk:17,def:15,spd:16,hp:165,clr:0xE040FB},
+  50:{nm:"AuroraMoth",atk:26,def:23,spd:22,hp:300,clr:0xFF80AB}},
+ dc:"Pris insect. Refracts enmy atacks!"},
+vwk:{nm:"VoidWaker",ic:"\uD83C\uDF3F",bc:0x1a1a2e,ac:0x533483,
+ bs:{hp:46,atk:7,def:4,spd:7},
+ sp:{1:{n:"Portal",pw:14,co:0},10:{n:"Warp",pw:32,co:8},25:{n:"DimnsinSlash",pw:66,co:18},50:{n:"ReiltyBrak",pw:134,co:30}},
+ ev:{10:{nm:"WarpWaker",atk:11,def:8,spd:11,hp:86,clr:0x311B92},
+  25:{nm:"DimnsinWaker",atk:18,def:14,spd:16,hp:166,clr:0x4527A0},
+  50:{nm:"ChaosWaker",atk:27,def:22,spd:22,hp:300,clr:0x7C4DFF}},
+ dc:"Dimnsional pet. Bends reality!"}};// TERRIN (20 biomes)
+var TP=['deep','ocen','shllow','river','ice','baech','desert','savna','gras','stepe','forst','taiga','jngle','swamp','tunra','snow','rock','pek','lva','ash'];
+var TC={deep:0x2E45C,ocen:0x3D6478,shllow:0x6E9A8,river:0x5A8C0,ice:0xC6D6D8,baech:0xD9C89A,desert:0xDC088,savna:0xCB063,gras:0x7C05A,stepe:0xB2B080,forst:0x4E8C42,taiga:0x4175C,jngle:0x3C8442,swamp:0xE7284,tunra:0xAB098,snow:0xE4EDC,rock:0x8A8173,pek:0xA9E90,lva:0xD4602A,ash:0x66158};
+var WSEED=Math.floor(Math.random()*999999);
+var WN=new SR(WSEED);
+var WM=[],WV=[];
+var WSIZE=200;
+function genWorld(){
+  for(var y=0;y<WSIZE;y++)for(var x=0;x<WSIZE;x++){
+    var nx=x/WSIZE,ny=y/WSIZE;
+    var e=WN.fbm(nx*6,ny*6,5);
+    var t=WN.fbm(nx*4,ny*4,3)-0.5;
+    var r=WN.fbm(nx*5,ny*5,4);
+    var lnd=e>0.38?1:0;
+    var idx=y*WSIZE+x;
+    WM[idx]=e;WV[idx]=0;
+    if(!lnd){WV[idx]=e>0.25?2:1;}
+    else{
+      if(e<0.42)WV[idx]=5;
+      else if(e>0.85)WV[idx]=17;
+      else if(e>0.78)WV[idx]=t<-0.1?16:15;
+      else if(t<-0.3){WV[idx]=r<0.3?11:12;}
+      else if(t>0.4){WV[idx]=r<0.2?7:r<0.45?8:9;}
+      else{WV[idx]=r<0.25?6:r<0.5?7:r<0.7?8:10;}
+    }
   }
-};
-
+}
 // ---- Pet Creation ----
 function createPet(species, name) {
   const spec = PET_SPECIES[species];
@@ -824,22 +859,22 @@ function createPet(species, name) {
   const pet = {
     id: id,
     species: species,
-    name: name || spec.name,
+    name: name || spec.nm,
     level: 1,
     xp: 0,
     hunger: 80,
     happy: 80,
     energy: 80,
-    health: spec.baseStats.hp,
-    maxHealth: spec.baseStats.hp,
-    atk: spec.baseStats.atk,
-    def: spec.baseStats.def,
-    spd: spec.baseStats.spd,
+    health: spec.bs.hp,
+    maxHealth: spec.bs.hp,
+    atk: spec.bs.atk,
+    def: spec.bs.def,
+    spd: spec.bs.spd,
     bond: 0,
     breedCount: 0,
     evolutionStage: 0,
-    color: spec.baseColor,
-    accentColor: spec.accentColor,
+    color: spec.bc,
+    accentColor: spec.ac,
     shiny: Math.random() < 0.01,
     createdDay: GS.day,
     equips: {},
@@ -847,8 +882,8 @@ function createPet(species, name) {
     ribbons: []
   };
   if (pet.shiny) {
-    pet.color = 0xf4c542;
-    pet.accntColor = 0xecf0f1;
+    pet.bc = 0xf4c542;
+    pet.ac = 0xecf0f1;
     pet.name = '\u2728 ' + pet.name + ' \u2728';
     pet.atk += 2;
     pet.def += 2;
@@ -881,7 +916,7 @@ function checkLevelUp(pet) {
     checkAchievements('pet_level', pet);
     // Check evolution
     const spec = PET_SPECIES[pet.species];
-    const evos = spec.evolutions;
+    const evos = spec.ev;
     for (const lv in evos) {
       if (pet.level >= parseInt(lv) && pet.evolutionStage < parseInt(lv)) {
         applyEvoluton(pet, evos[lv], lv);
@@ -899,7 +934,7 @@ function applyEvoluton(pet, evo, stageLv) {
   pet.spd = evo.spd;
   pet.maxHealth = evo.hp;
   pet.health = evo.hp;
-  pet.color = evo.color;
+  pet.bc = evo.color;
   SFX.evolve();
   notify('\u2728 ' + pet.name + ' evolved!', 5);
 }
@@ -981,7 +1016,7 @@ function useItem(itemKey, pet) {
   if (itemKey === 'mysteryEge') {
     const species = Object.keys(PET_SPECIES)[Math.floor(Math.random() * Object.keys(PET_SPECIES).length)];
     const newPet = createPet(species);
-    notify('\uD83E\uDD5A Hatched a ' + PET_SPECIES[species].name + '!', 5);
+    notify('\uD83E\uDD5A Hatched a ' + PET_SPECIES[species].nm + '!', 5);
     SFX.evolve();
     return true;
   }
@@ -1571,7 +1606,7 @@ function harvestPlot(plotIdx) {
   GS.gardenPlots[plotIdx].plant = null;
   GS.gardenHarvests++;
   SFX.coin();
-  notify('Harvested ' + spec.name + '! +' + spec.reward + ' coins + ' + spec.yield + ' treats');
+  notify('Harvested ' + spec.nm + '! +' + spec.reward + ' coins + ' + spec.yield + ' treats');
   updateCurrncyDisplay();
   updateQuestProgess('harves');
 }
@@ -2015,9 +2050,9 @@ function showPetCreation() {
   for (const [key, spec] of Object.entries(PET_SPECIES)) {
     const div = document.createElement('div');
     div.style.cssText = 'cursor:pointer;text-align:center;padding:8px;border:1px solid var(--purple);border-radius:8px;width:80px;';
-    div.innerHTML = '<div style="font-size:32px">' + spec.icon + '</div><div style="font-size:10px">' + spec.name + '</div>';
+    div.innerHTML = '<div style="font-size:32px">' + spec.ic + '</div><div style="font-size:10px">' + spec.nm + '</div>';
     div.onclick = function() {
-      const name = prompt('Name your ' + spec.name + ':', spec.name);
+      const name = prompt('Name your ' + spec.nm + ':', spec.nm);
       if (name) {
         const pet = createPet(key, name);
         document.getElementById('pet-creation').style.display = 'none';
@@ -2174,395 +2209,214 @@ function initPixi() {
 }
 
 // ---- Procedural Pet Drawing ----
-function drawPet(g, x, y, scale, petData) {
-  if (!petData) return;
-  const spec = PET_SPECIES[petData.species];
-  if (spec && spec.draw) {
-    spec.draw(g, x, y, scale, petData);
-  } else {
-    drawDefaultPet(g, x, y, scale, petData);
-  }
+var PET_DRAW={flr:drawFlareHound,glw:drawGlacalWisp,thc:drawThundrClaw,shm:drawShadoMoph,trg:drawTeraGolem,vnq:drawVenomQuil,asw:drawAstalWyrm,blk:drawBlomKnight,aqr:drawAquaRider,emw:drawEmberWing,crm:drawCrystalMoth,vwk:drawVoidWaker};
+function drawPet(g,x,y,scale,petData){
+  if(!petData) return;
+  var dfn=PET_DRAW[petData.species];
+  if(dfn){dfn(g,scale,GS.tick||0,petData);}
+  else{drawDefaltPet(g,scale,GS.tick||0,petData);}
 }
-
-function drawCatt(g, x, y, s, data) {
-  const c = data.colr || 0xe67e22;
-  const ac = data.accntColor || 0xf4c542;
-  g.clear();
-  // Body
-  g.beginFil(c);
-  g.drawElipse(x, y + 10*s, 20*s, 16*s);
+function drawFlareHound(g,s,f,d){
+  var bc=d.bc||0xFF6B3B,ac=d.ac||0xFFF3E0,yw=0xF4C542;
+  g.beginFil(bc);
+  g.drawRect(3*s,4*s,10*s,8*s);g.drawRect(2*s,1*s,6*s,4*s);
+  g.drawRect(2*s,5*s,1*s,3*s);g.drawRect(8*s,5*s,1*s,3*s);
+  g.drawRect(4*s,12*s,2*s,3*s);g.drawRect(10*s,12*s,2*s,3*s);
   g.endFil();
-  // Head
-  g.beginFil(c);
-  g.drawCirle(x, y - 8*s, 14*s);
-  g.endFil();
-  // Ears (triangles)
-  g.beginFil(c);
-  g.moveTo(x - 14*s, y - 18*s);
-  g.lineTo(x - 8*s, y - 30*s);
-  g.lineTo(x - 2*s, y - 18*s);
-  g.endFil();
-  g.beginFil(c);
-  g.moveTo(x + 2*s, y - 18*s);
-  g.lineTo(x + 8*s, y - 30*s);
-  g.lineTo(x + 14*s, y - 18*s);
-  g.endFil();
-  // Eyes
-  g.beginFil(0xecf0f1);
-  g.drawCirle(x - 6*s, y - 10*s, 4*s);
-  g.drawCirle(x + 6*s, y - 10*s, 4*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 5*s, y - 10*s, 2*s);
-  g.drawCirle(x + 5*s, y - 10*s, 2*s);
-  g.endFil();
-  // Whiskers
-  g.lineStyle(1, ac);
-  g.moveTo(x - 14*s, y - 6*s); g.lineTo(x - 4*s, y - 4*s);
-  g.moveTo(x - 14*s, y - 2*s); g.lineTo(x - 4*s, y - 2*s);
-  g.moveTo(x + 4*s, y - 4*s); g.lineTo(x + 14*s, y - 6*s);
-  g.moveTo(x + 4*s, y - 2*s); g.lineTo(x + 14*s, y - 2*s);
-  g.lineStyle(0);
-  // Tial
-  g.beginFil(c);
-  g.moveTo(x, y + 22*s);
-  g.lineTo(x - 6*s, y + 38*s);
-  g.lineTo(x + 6*s, y + 38*s);
-  g.endFil();
-  // Paws
-  g.beginFil(ac);
-  g.drawElipse(x - 10*s, y + 24*s, 5*s, 3*s);
-  g.drawElipse(x + 10*s, y + 24*s, 5*s, 3*s);
-  g.endFil();
-  // Nose
-  g.beginFil(0xe91e63);
-  g.drawCirle(x, y - 4*s, 2*s);
-  g.endFil();
-  // Acents
-  g.beginFil(ac);
-  g.drawCirle(x - 16*s, y + 20*s, 2*s);
-  g.drawCirle(x - 8*s, y + 22*s, 2*s);
-  g.drawCirle(x + 8*s, y + 22*s, 2*s);
-  g.drawCirle(x + 16*s, y + 20*s, 2*s);
-  g.endFil();
-  // Shine
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x - 4*s, y - 14*s, 6*s);
-    g.endFil();
-  }
+  g.beginFil(yw);g.drawRect(1*s,0,3*s,3*s);g.drawRect(7*s,0,3*s,3*s);
+  var tf=f%2;g.drawRect(14*s+tf*2*s,5*s,3*s,5*s);g.endFil();
+  g.beginFil(ac);g.drawRect(5*s,6*s,5*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(4*s,2*s,2*s,2*s);g.drawRect(8*s,2*s,2*s,2*s);g.endFil();
+  g.beginFil(0xe84560);g.drawRect(18*s+tf*2*s,3*s,2*s,3*s);g.endFil();
+  g.beginFil(yw);g.drawRect(19*s+((f+1)%2)*2*s,1*s,2*s,2*s);g.endFil();
 }
-
-function drawDog(g, x, y, s, data) {
-  const c = data.color || 0x8B4513;
-  const ac = data.accentColor || 0xD2691E;
-  g.clear();
-  // Body
-  g.beginFil(c);
-  g.drawElipse(x, y + 8*s, 22*s, 14*s);
+function drawGlacalWisp(g,s,f,d){
+  var bc=d.bc||0x7EC8E3,ac=d.ac||0xFFFFFF;
+  g.beginFil(bc);g.drawRect(4*s,4*s,8*s,9*s);g.drawRect(3*s,1*s,4*s,4*s);
+  g.drawRect(7*s,2*s,4*s,4*s);g.drawRect(3*s,13*s,3*s,3*s);
+  g.drawRect(8*s,13*s,3*s,3*s);g.drawRect(0,8*s,3*s,3*s);
+  g.drawRect(13*s,7*s,2*s,2*s);g.drawRect(14*s,10*s,2*s,2*s);
   g.endFil();
-  // Head
-  g.beginFil(c);
-  g.drawCirle(x + 12*s, y - 6*s, 12*s);
+  g.beginFil(ac);g.drawRect(4*s,2*s,2*s,1*s);g.drawRect(8*s,3*s,2*s,1*s);
+  g.drawRect(2*s,5*s,1*s,2*s);g.drawRect(9*s,6*s,1*s,2*s);
   g.endFil();
-  // Ears (flopy)
-  g.beginFil(ac);
-  g.drawElipse(x + 2*s, y - 14*s, 5*s, 10*s, 0.3);
-  g.drawElipse(x + 22*s, y - 14*s, 5*s, 10*s, -0.3);
-  g.endFil();
-  // Snout
-  g.beginFil(ac);
-  g.drawElipse(x + 20*s, y - 2*s, 6*s, 4*s);
-  g.endFil();
-  // Eyes
-  g.beginFil(0xecf0f1);
-  g.drawCirle(x + 8*s, y - 8*s, 3*s);
-  g.drawCirle(x + 16*s, y - 6*s, 3*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x + 7*s, y - 8*s, 1.5*s);
-  g.drawCirle(x + 15*s, y - 6*s, 1.5*s);
-  g.endFil();
-  // Nose
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x + 22*s, y - 2*s, 2*s);
-  g.endFil();
-  // Tial
-  g.beginFil(c);
-  g.drawElipse(x - 20*s, y + 6*s, 4*s, 12*s, 0.5);
-  g.endFil();
-  // Legs
-  g.beginFil(ac);
-  g.drawRect(x - 12*s, y + 18*s, 5*s, 12*s);
-  g.drawRect(x - 2*s, y + 18*s, 5*s, 12*s);
-  g.drawRect(x + 8*s, y + 14*s, 5*s, 10*s);
-  g.drawRect(x + 18*s, y + 14*s, 5*s, 10*s);
-  g.endFil();
-  // Colar
-  g.lineStyle(2*s, 0xe94560);
-  g.drawElipse(x + 10*s, y + 10*s, 10*s, 3*s);
-  g.lineStyle(0);
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x + 8*s, y - 12*s, 5*s);
-    g.endFil();
-  }
+  g.beginFil(0x1a1a2e);g.drawRect(4*s,5*s,1*s,2*s);g.drawRect(8*s,4*s,1*s,2*s);g.endFil();
+  var b=f%3;g.alpha=0.6;g.beginFil(0xE0F7FA);
+  g.drawRect((6+b)*s,15*s,2*s,2*s);g.drawRect((4-b)*s,14*s,1*s,2*s);
+  g.drawRect((10+b)*s,14*s,1*s,2*s);g.endFil();g.alpha=1;
 }
-
-function drawDragon(g, x, y, s, data) {
-  const c = data.color || 0x2ecc71;
-  const ac = data.accentColor || 0xf4c542;
-  g.clear();
-  // Body
-  g.beginFil(c);
-  g.drawElipse(x, y, 24*s, 14*s);
+function drawThundrClaw(g,s,f,d){
+  var bc=d.bc||0xF4C542,ac=d.ac||0x533483;
+  g.beginFil(bc);g.drawRect(2*s,3*s,8*s,7*s);g.drawRect(4*s,0,6*s,4*s);
+  g.drawRect(0,5*s,3*s,2*s);g.drawRect(9*s,4*s,3*s,2*s);
+  g.drawRect(4*s,10*s,2*s,4*s);g.drawRect(8*s,10*s,2*s,4*s);
   g.endFil();
-  // Neck + Head
-  g.beginFil(c);
-  g.moveTo(x - 16*s, y - 10*s);
-  g.lineTo(x - 22*s, y - 28*s);
-  g.lineTo(x - 12*s, y - 28*s);
-  g.lineTo(x - 8*s, y - 10*s);
+  g.beginFil(ac);g.drawRect(3*s,1*s,2*s,3*s);g.drawRect(7*s,2*s,2*s,2*s);
+  g.drawRect(1*s,6*s,1*s,1*s);g.drawRect(10*s,5*s,1*s,1*s);
   g.endFil();
-  g.beginFil(c);
-  g.drawCirle(x - 17*s, y - 36*s, 12*s);
-  g.endFil();
-  // Horns
-  g.beginFil(ac);
-  g.moveTo(x - 22*s, y - 44*s);
-  g.lineTo(x - 28*s, y - 56*s);
-  g.lineTo(x - 18*s, y - 44*s);
-  g.endFil();
-  g.beginFil(ac);
-  g.moveTo(x - 12*s, y - 44*s);
-  g.lineTo(x - 6*s, y - 56*s);
-  g.lineTo(x - 16*s, y - 44*s);
-  g.endFil();
-  // Eyes
-  g.beginFil(0xf4c542);
-  g.drawCirle(x - 21*s, y - 36*s, 4*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 22*s, y - 36*s, 2*s);
-  g.endFil();
-  // Wings
-  g.beginFil(c, 0.7);
-  g.moveTo(x, y - 16*s);
-  g.lineTo(x + 10*s, y - 38*s);
-  g.lineTo(x + 8*s, y - 44*s);
-  g.lineTo(x - 2*s, y - 30*s);
-  g.lineTo(x - 8*s, y - 44*s);
-  g.lineTo(x - 6*s, y - 30*s);
-  g.endFil();
-  // Tial
-  g.beginFil(c);
-  g.drawElipse(x + 22*s, y + 2*s, 8*s, 20*s, 0.4);
-  g.endFil();
-  g.beginFil(ac);
-  g.moveTo(x + 28*s, y + 10*s);
-  g.lineTo(x + 36*s, y + 22*s);
-  g.lineTo(x + 32*s, y + 10*s);
-  g.endFil();
-  // Legs
-  g.beginFil(ac);
-  g.drawRect(x - 12*s, y + 10*s, 6*s, 14*s);
-  g.drawRect(x - 2*s, y + 12*s, 6*s, 14*s);
-  g.drawRect(x + 10*s, y + 10*s, 6*s, 14*s);
-  g.drawRect(x + 20*s, y + 8*s, 6*s, 12*s);
-  g.endFil();
-  // Scales
-  for (let i = 0; i < 4; i++) {
-    g.beginFil(ac, 0.4);
-    g.drawCirle(x - 12*s + i*8*s, y + 2*s, 2*s);
-    g.endFil();
-  }
-  g.beginFil(0xe94560);
-  g.drawCirle(x - 17*s, y - 26*s, 2*s);
-  g.endFil();
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x - 18*s, y - 40*s, 5*s);
-    g.endFil();
-  }
+  g.beginFil(0xFFD600);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(5*s,1*s,1*s,1*s);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+  var tf=f%3;
+  g.beginFil(0xFFFF00);g.drawRect((0-tf)*s,7*s,1*s,2*s);g.drawRect((11+tf)*s,6*s,1*s,2*s);g.endFil();
 }
-
-function drawBunny(g, x, y, s, data) {
-  const c = data.color || 0xecf0f1;
-  const ac = data.accentColor || 0xe91e63;
-  g.clear();
-  // Body
-  g.beginFil(c);
-  g.drawElipse(x, y + 8*s, 16*s, 12*s);
+function drawShadoMoph(g,s,f,d){
+  var bc=d.bc||0x1a1a2e,ac=d.ac||0x9b59b6;
+  g.beginFil(bc);g.drawRect(3*s,3*s,10*s,8*s);g.drawRect(5*s,0,6*s,5*s);
+  g.drawRect(4*s,11*s,3*s,4*s);g.drawRect(9*s,11*s,3*s,4*s);
   g.endFil();
-  // Head
-  g.beginFil(c);
-  g.drawCirle(x, y - 10*s, 10*s);
+  g.beginFil(ac);g.drawRect(6*s,2*s,4*s,2*s);g.drawRect(2*s,5*s,2*s,4*s);
+  g.drawRect(5*s,6*s,6*s,2*s);g.drawRect(12*s,5*s,2*s,4*s);
   g.endFil();
-  // Ears (long)
-  g.beginFil(c);
-  g.drawElipse(x - 6*s, y - 28*s, 3*s, 14*s);
-  g.drawElipse(x + 6*s, y - 28*s, 3*s, 14*s);
+  g.beginFil(0x4A148C);g.drawRect(7*s,1*s,2*s,1*s);g.endFil();
+  g.beginFil(0xECF0F1);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(10*s,3*s,1*s,1*s);g.endFil();
+  var tf=f%4;g.alpha=tf<2?0.3:0.7;
+  g.beginFil(ac);g.drawRect((1+tf)*s,0,2*s,2*s);g.drawRect((15-tf)*s,9*s,2*s,2*s);g.endFil();g.alpha=1;
+}
+function drawTeraGolem(g,s,f,d){
+  var bc=d.bc||0x8A8173,ac=d.ac||0x6B5B4F;
+  g.beginFil(bc);g.drawRect(3*s,1*s,10*s,10*s);g.drawRect(2*s,0,4*s,3*s);
+  g.drawRect(8*s,0,4*s,3*s);g.drawRect(1*s,3*s,2*s,5*s);
+  g.drawRect(13*s,3*s,2*s,5*s);g.drawRect(4*s,11*s,3*s,5*s);
+  g.drawRect(9*s,11*s,3*s,5*s);g.endFil();
+  g.beginFil(ac);g.drawRect(2*s,1*s,2*s,1*s);g.drawRect(10*s,1*s,2*s,1*s);
+  g.drawRect(5*s,4*s,6*s,4*s);g.drawRect(2*s,4*s,2*s,2*s);
+  g.drawRect(12*s,4*s,2*s,2*s);g.endFil();
+  g.beginFil(0xB0BEC5);g.drawRect(3*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(6*s,3*s,2*s,2*s);g.drawRect(10*s,3*s,2*s,2*s);g.endFil();
+}
+function drawVenomQuil(g,s,f,d){
+  var bc=d.bc||0x9b59b6,ac=d.ac||0x2ecc71;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(3*s,0,5*s,5*s);
+  g.drawRect(7*s,1*s,5*s,3*s);g.endFil();
+  g.beginFil(ac);g.drawRect(0,6*s,3*s,2*s);g.drawRect(2*s,4*s,2*s,2*s);
+  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(13*s,7*s,2*s,2*s);
+  g.drawRect(1*s,10*s,2*s,3*s);g.drawRect(12*s,9*s,2*s,3*s);
+  g.drawRect(1*s,2*s,2*s,2*s);g.drawRect(14*s,1*s,2*s,2*s);
   g.endFil();
-  g.beginFil(ac);
-  g.drawElipse(x - 6*s, y - 32*s, 1.5*s, 10*s);
-  g.drawElipse(x + 6*s, y - 32*s, 1.5*s, 10*s);
+  g.beginFil(0x1a1a2e);g.drawRect(5*s,2*s,1*s,2*s);g.drawRect(10*s,1*s,1*s,2*s);g.endFil();
+  g.beginFil(0x76FF03);g.drawRect(4*s,4*s,1*s,1*s);g.drawRect(10*s,6*s,1*s,1*s);g.endFil();
+}
+function drawAstalWyrm(g,s,f,d){
+  var bc=d.bc||0x533483,ac=d.ac||0xf4c542;
+  g.beginFil(bc);g.drawRect(0,4*s,12*s,5*s);g.drawRect(4*s,0,6*s,6*s);
+  g.drawRect(12*s,4*s,4*s,4*s);g.drawRect(2*s,9*s,4*s,3*s);
+  g.drawRect(6*s,8*s,4*s,2*s);g.endFil();
+  g.beginFil(ac);g.drawRect(5*s,1*s,4*s,2*s);g.drawRect(1*s,5*s,2*s,2*s);
+  g.drawRect(14*s,5*s,2*s,1*s);g.drawRect(16*s,3*s,2*s,3*s);
   g.endFil();
-  // Eyes
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 4*s, y - 12*s, 2.5*s);
-  g.drawCirle(x + 4*s, y - 12*s, 2.5*s);
+  g.beginFil(0xFFFFFF);g.drawRect(6*s,2*s,2*s,1*s);g.endFil();
+  g.beginFil(0xE040FB);g.drawRect(7*s,1*s,1*s,1*s);g.drawRect(13*s,5*s,1*s,2*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
+}
+function drawBlomKnight(g,s,f,d){
+  var bc=d.bc||0x2ecc71,ac=d.ac||0xe67e22;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(2*s,5*s,2*s,4*s);g.drawRect(12*s,5*s,2*s,4*s);
+  g.drawRect(5*s,10*s,2*s,4*s);g.drawRect(9*s,10*s,2*s,4*s);
   g.endFil();
-  g.beginFil(0xffffff);
-  g.drawCirle(x - 3*s, y - 13*s, 1*s);
-  g.drawCirle(x + 3*s, y - 13*s, 1*s);
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(4*s,5*s,1*s,2*s);
+  g.drawRect(12*s,5*s,1*s,2*s);g.drawRect(5*s,3*s,6*s,1*s);
+  g.drawRect(7*s,7*s,3*s,3*s);g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(8*s,3*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,1*s,1*s,1*s);g.endFil();
+}
+function drawAquaRider(g,s,f,d){
+  var bc=d.bc||0x3498db,ac=d.ac||0xecf0f1;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,6*s);g.drawRect(3*s,0,5*s,5*s);
+  g.drawRect(7*s,0,5*s,3*s);g.drawRect(1*s,5*s,3*s,2*s);
+  g.drawRect(12*s,5*s,3*s,2*s);g.drawRect(3*s,9*s,4*s,3*s);
+  g.drawRect(9*s,9*s,4*s,3*s);g.endFil();
+  g.beginFil(ac);g.drawRect(4*s,1*s,3*s,2*s);g.drawRect(8*s,1*s,3*s,2*s);
+  g.drawRect(5*s,4*s,6*s,3*s);g.drawRect(5*s,8*s,6*s,1*s);
   g.endFil();
-  // Nose
-  g.beginFil(ac);
-  g.drawCirle(x, y - 6*s, 1.5*s);
+  g.beginFil(0xE1F5FE);g.drawRect(5*s,2*s,1*s,1*s);g.drawRect(9*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(6*s,1*s,1*s,1*s);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+  var wv=f%3;g.alpha=0.5;
+  g.beginFil(ac);g.drawRect(0,(8+wv)*s,2*s,2*s);g.drawRect(14*s,(8-wv)*s,2*s,2*s);g.endFil();g.alpha=1;
+}
+function drawEmberWing(g,s,f,d){
+  var bc=d.bc||0xe67e22,ac=d.ac||0xf4c542;
+  g.beginFil(bc);g.drawRect(5*s,4*s,6*s,6*s);g.drawRect(6*s,0,4*s,6*s);
+  g.drawRect(4*s,10*s,3*s,3*s);g.drawRect(9*s,10*s,3*s,3*s);
   g.endFil();
-  // Whiskers
-  g.lineStyle(0.5*s, 0x7f8c8d);
-  g.moveTo(x - 4*s, y - 6*s); g.lineTo(x - 10*s, y - 8*s);
-  g.moveTo(x - 4*s, y - 4*s); g.lineTo(x - 10*s, y - 4*s);
-  g.moveTo(x + 4*s, y - 6*s); g.lineTo(x + 10*s, y - 8*s);
-  g.moveTo(x + 4*s, y - 4*s); g.lineTo(x + 10*s, y - 4*s);
-  g.lineStyle(0);
-  // Puf tail
-  g.beginFil(c);
-  g.drawCirle(x, y + 22*s, 6*s);
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(1*s,3*s,4*s,1*s);
+  g.drawRect(11*s,4*s,4*s,1*s);g.drawRect(2*s,2*s,3*s,1*s);
+  g.drawRect(12*s,3*s,3*s,1*s);g.endFil();
+  g.beginFil(0xFFD600);g.drawRect(3*s,0,2*s,2*s);g.drawRect(13*s,1*s,2*s,2*s);g.endFil();
+  g.beginFil(0xFF3D00);g.drawRect(0,5*s,2*s,3*s);g.drawRect(15*s,4*s,2*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(7*s,2*s,1*s,1*s);g.drawRect(9*s,3*s,1*s,1*s);g.endFil();
+  var tf=f%2;
+  g.beginFil(0xe84560);g.drawRect((4+tf)*s,14*s,2*s,2*s);g.drawRect((10-tf)*s,13*s,2*s,2*s);g.endFil();
+}
+function drawCrystalMoth(g,s,f,d){
+  var bc=d.bc||0x00BCD4,ac=d.ac||0xEC407A;
+  g.beginFil(bc);g.drawRect(4*s,5*s,8*s,5*s);g.drawRect(5*s,2*s,6*s,5*s);
+  g.drawRect(3*s,10*s,4*s,3*s);g.drawRect(9*s,10*s,4*s,3*s);
   g.endFil();
-  // Paws
-  g.beginFil(ac);
-  g.drawElipse(x - 10*s, y + 18*s, 4*s, 3*s);
-  g.drawElipse(x + 10*s, y + 18*s, 4*s, 3*s);
+  var wf=f%4;g.beginFil(ac,0.6);
+  g.drawRect(0,wf*s,3*s,4*s);g.drawRect(13*s,(3-wf)*s,3*s,4*s);
+  g.drawRect(wf*s,0,3*s,2*s);g.drawRect((13-wf)*s,0,3*s,2*s);
   g.endFil();
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x, y - 14*s, 4*s);
-    g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(6*s,3*s,4*s,1*s);g.drawRect(5*s,6*s,2*s,1*s);g.drawRect(9*s,6*s,2*s,1*s);g.endFil();
+  g.beginFil(0x4DD0E1);g.drawRect(7*s,4*s,2*s,2*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,5*s,1*s,1*s);g.endFil();
+}
+function drawVoidWaker(g,s,f,d){
+  var bc=d.bc||0x1a1a2e,ac=d.ac||0x533483;
+  g.beginFil(bc);g.drawRect(5*s,3*s,6*s,7*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(3*s,10*s,3*s,3*s);g.drawRect(10*s,10*s,3*s,3*s);
+  g.drawRect(1*s,4*s,4*s,2*s);g.drawRect(13*s,4*s,3*s,2*s);
+  g.endFil();
+  var vf=f%4;
+  g.beginFil(ac);g.drawRect(7*s,1*s,2*s,2*s);g.drawRect(3*s,6*s,2*s,2*s);
+  g.drawRect(12*s,(5+vf)*s,2*s,2*s);g.endFil();
+  g.beginFil(0x7C4DFF);g.drawRect(0,7*s,2*s,3*s);g.drawRect(1*s,1*s,2*s,2*s);
+  g.drawRect(14*s,1*s,2*s,2*s);g.drawRect(15*s,8*s,1*s,4*s);g.endFil();
+  g.beginFil(0xFFFFFF);g.drawRect(8*s,2*s,1*s,1*s);g.endFil();
+  g.beginFil(0x311B92);g.drawRect(9*s,1*s,1*s,1*s);g.endFil();
+}
+function drawDefaltPet(g,s,f,d){
+  var bc=d.bc||0xf4c542;
+  g.beginFil(bc);g.drawRect(4*s,3*s,8*s,8*s);g.drawRect(6*s,0,4*s,5*s);
+  g.drawRect(2*s,11*s,3*s,3*s);g.drawRect(11*s,11*s,3*s,3*s);g.endFil();
+  g.beginFil(0xecf0f1);g.drawRect(7*s,2*s,2*s,2*s);g.drawRect(5*s,5*s,6*s,3*s);g.endFil();
+  g.beginFil(0x1a1a2e);g.drawRect(8*s,3*s,1*s,1*s);g.drawRect(9*s,4*s,1*s,1*s);g.endFil();
+}// PIXI TILEMP RENDERER
+var tileMapContainer=null;
+var mapCamX=0,mapCamY=0;
+function initTileMap(){
+  tileMapContainer=new PIXI.Container();
+  tileMapContainer.visible=false;
+  renderStage.addChild(tileMapContainer);
+}
+function renderTileMap(){
+  if(!tileMapContainer||!tileMapContainer.visible) return;
+  if(typeof WN=="undefined"||WV.length===0) genWorld();
+  tileMapContainer.removeChildren();
+  var tg=new PIXI.Graphics();
+  var ts=4,vw=Math.ceil(1024/ts)+2,vh=Math.ceil(768/ts)+2;
+  var ox=Math.max(0,Math.floor(mapCamX/ts)),oy=Math.max(0,Math.floor(mapCamY/ts));
+  for(var y=0;y<vh;y++)for(var x=0;x<vw;x++){
+    var wx=ox+x,wy=oy+y;
+    if(wx>=WSIZE||wy>=WSIZE) continue;
+    var bidx=wy*WSIZE+wx;
+    var bn=WV[bidx];
+    if(bn>=0&&bn<TP.length){
+      tg.beginFil(TC[TP[bn]]);
+      tg.drawRect(x*ts-mapCamX%ts,y*ts-mapCamY%ts,ts,ts);
+      tg.endFil();
+    }
   }
+  tileMapContainer.addChild(tg);
 }
-
-function drawFox(g, x, y, s, data) {
-  const c = data.color || 0xe67e22;
-  const ac = data.accentColor || 0xecf0f1;
-  g.clear();
-  // Body
-  g.beginFil(c);
-  g.drawElipse(x, y + 4*s, 20*s, 12*s);
-  g.endFil();
-  // Tial
-  g.beginFil(c);
-  g.drawElipse(x + 18*s, y - 2*s, 5*s, 18*s, 0.3);
-  g.endFil();
-  g.beginFil(ac);
-  g.drawCirle(x + 22*s, y + 10*s, 3*s);
-  g.endFil();
-  // Head
-  g.beginFil(c);
-  g.drawCirle(x, y - 14*s, 12*s);
-  g.endFil();
-  // Ears (pointed)
-  g.beginFil(c);
-  g.moveTo(x - 12*s, y - 20*s); g.lineTo(x - 8*s, y - 36*s); g.lineTo(x - 2*s, y - 20*s);
-  g.endFil();
-  g.beginFil(ac);
-  g.moveTo(x - 10*s, y - 20*s); g.lineTo(x - 8*s, y - 30*s); g.lineTo(x - 6*s, y - 20*s);
-  g.endFil();
-  g.beginFil(c);
-  g.moveTo(x + 2*s, y - 20*s); g.lineTo(x + 8*s, y - 36*s); g.lineTo(x + 12*s, y - 20*s);
-  g.endFil();
-  g.beginFil(ac);
-  g.moveTo(x + 6*s, y - 20*s); g.lineTo(x + 8*s, y - 30*s); g.lineTo(x + 10*s, y - 20*s);
-  g.endFil();
-  // White face patch
-  g.beginFil(ac);
-  g.drawElipse(x, y - 6*s, 8*s, 6*s);
-  g.endFil();
-  // Eyes
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 5*s, y - 14*s, 2.5*s);
-  g.drawCirle(x + 5*s, y - 14*s, 2.5*s);
-  g.endFil();
-  // Nose
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x, y - 6*s, 2*s);
-  g.endFil();
-  // Legs
-  g.beginFil(ac);
-  g.drawRect(x - 10*s, y + 14*s, 4*s, 8*s);
-  g.drawRect(x - 2*s, y + 14*s, 4*s, 8*s);
-  g.drawRect(x + 8*s, y + 12*s, 4*s, 8*s);
-  g.drawRect(x + 16*s, y + 10*s, 4*s, 8*s);
-  g.endFil();
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x - 2*s, y - 18*s, 5*s);
-    g.endFil();
-  }
-}
-
-function drawSime(g, x, y, s, data) {
-  const c = data.color || 0x2ecc71;
-  const ac = data.accentColor || 0x27ae60;
-  g.clear();
-  // Bouncy body
-  const bounce = Math.sin(GS.tick * 0.1) * 3*s;
-  g.beginFil(c);
-  g.drawElipse(x, y + 4*s + bounce, 22*s, 16*s);
-  g.endFil();
-  // Top/wigle
-  g.beginFil(ac);
-  g.drawElipse(x, y - 8*s + bounce, 14*s, 8*s);
-  g.endFil();
-  // Eyes
-  g.beginFil(0xecf0f1);
-  g.drawCirle(x - 8*s, y - 6*s + bounce, 5*s);
-  g.drawCirle(x + 8*s, y - 6*s + bounce, 5*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 7*s, y - 6*s + bounce, 3*s);
-  g.drawCirle(x + 7*s, y - 6*s + bounce, 3*s);
-  g.endFil();
-  // Mouth
-  g.lineStyle(1*s, 0x1a1a2e);
-  g.arc(x, y + 2*s + bounce, 3*s, 0, Math.PI);
-  g.lineStyle(0);
-  // Shine spots
-  g.beginFil(ac, 0.5);
-  g.drawCirle(x - 14*s, y + 2*s + bounce, 3*s);
-  g.drawCirle(x + 14*s, y + 4*s + bounce, 2*s);
-  g.drawCirle(x - 6*s, y + 12*s + bounce, 2*s);
-  g.endFil();
-  if (data.shiny) {
-    g.beginFil(0xffffff, 0.3);
-    g.drawCirle(x - 4*s, y - 10*s + bounce, 6*s);
-    g.endFil();
-  }
-}
-
-function drawDefaltPet(g, x, y, s, data) {
-  const c = data.color || 0xf4c542;
-  g.clear();
-  g.beginFil(c);
-  g.drawCirle(x, y, 18*s);
-  g.endFil();
-  g.beginFil(0xecf0f1);
-  g.drawCirle(x - 6*s, y - 4*s, 4*s);
-  g.drawCirle(x + 6*s, y - 4*s, 4*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x - 5*s, y - 4*s, 2*s);
-  g.drawCirle(x + 5*s, y - 4*s, 2*s);
-  g.endFil();
-  g.beginFil(0x1a1a2e);
-  g.drawCirle(x, y + 2*s, 2*s);
-  g.endFil();
-  g.lineStyle(1.5*s, 0x1a1a2e);
-  g.arc(x, y + 6*s, 4*s, 0, Math.PI);
-  g.lineStyle(0);
-}
-
+document.addEventListener('keydown',function(e){
+  if(!tileMapContainer||!tileMapContainer.visible) return;
+  var spd=8;
+  if(e.key==='ArrowLeft'||e.key==='a') mapCamX=Math.max(0,mapCamX-spd);
+  if(e.key==='ArrowRight'||e.key==='d') mapCamX=Math.min(WSIZE*4-1024,mapCamX+spd);
+  if(e.key==='ArrowUp'||e.key==='w') mapCamY=Math.max(0,mapCamY-spd);
+  if(e.key==='ArrowDown'||e.key==='s') mapCamY=Math.min(WSIZE*4-768,mapCamY+spd);
+});
 // ---- Render Loop ----
 function renderFrame() {
   if (!app || !renderStage) return;
@@ -22583,7 +22437,7 @@ function renderGardenPanel() {
     if (plot.plant) {
       const spec = GARDEN_PLANTS[plot.plant.type];
       if (plot.plant.ready) {
-        html += '<div style="font-size:20px;cursor:pointer" onclick="harvestPlot('+i+');renderGardenPanel()">' + spec.icon + '</div>';
+        html += '<div style="font-size:20px;cursor:pointer" onclick="harvestPlot('+i+');renderGardenPanel()">' + spec.ic + '</div>';
         html += '<div style="font-size:8px;color:var(--green)">READY!</div>';
       } else {
         html += '<div style="font-size:16px">\uD83C\uDF31</div>';
@@ -22812,7 +22666,7 @@ function renderTradePanel() {
   html += '<select id="trade-pet">';
   for (const [id, pet] of Object.entries(GS.pets)) {
     if (id !== GS.activePetId) {
-      html += '<option value="'+id+'">'+pet.name+' ('+PET_SPECIES[pet.species].name+' Lv.'+pet.level+')</option>';
+      html += '<option value="'+id+'">'+pet.name+' ('+PET_SPECIES[pet.species].nm+' Lv.'+pet.level+')</option>';
     }
   }
   html += '</select>';
@@ -22983,7 +22837,7 @@ function renderSettingsPanel() {
   html += '<h3>Pets</h3>';
   for (const [id, pet] of Object.entries(GS.pets)) {
     html += '<div style="border:1px solid var(--gray);padding:4px;margin:2px;border-radius:4px">';
-    html += '<span style="'+(id===GS.activePetId?'color:var(--gold);font-weight:bold':'')+'">'+PET_SPECIES[pet.species].icon+' '+pet.name+' Lv.'+pet.level+'</span> ';
+    html += '<span style="'+(id===GS.activePetId?'color:var(--gold);font-weight:bold':'')+'">'+PET_SPECIES[pet.species].ic+' '+pet.name+' Lv.'+pet.level+'</span> ';
     if (id !== GS.activePetId) html += '<button class="btn small" onclick="GS.activePetId=\''+id+'\';updatePetUI();renderSettingsPanel()">Activate</button>';
     html += '<button class="btn small danger" onclick="releasePet(\''+id+'\')">Release</button>';
     html += '</div>';
@@ -23039,9 +22893,9 @@ function updatePetUI() {
     return;
   }
   const spec = PET_SPECIES[pet.species];
-  document.getElementById('pet-name-display').textContent = spec.icon + ' ' + pet.name;
+  document.getElementById('pet-name-display').textContent = spec.ic + ' ' + pet.name;
   document.getElementById('pet-leve').textContent = pet.level;
-  document.getElementById('pet-species').textContent = spec.name;
+  document.getElementById('pet-species').textContent = spec.nm;
   
   document.getElementById('hunger-val').textContent = Math.floor(pet.hunger) + '/100';
   document.getElementById('hunger-fill').style.width = pet.hunger + '%';
