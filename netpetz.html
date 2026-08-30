@@ -369,16 +369,16 @@ input, select {
     <button class="btn small" onclick="openPanel('train')">&#127947; Train</button>
     <button class="btn small" onclick="openPanel('garden')">&#127793; Garden</button>
     <button class="btn small" onclick="openPanel('shop')">&#127978; Shop</button>
-    <button class="btn small" onclick="openPanel('inventoy')">&#127873; Items</button>
-    <button clas="btn small" onclick="openPanel('adventure')">&#9876; Quest</button>
+    <button class="btn small" onclick="openPanel('inventory')">&#127873; Items</button>
+    <button class="btn small" onclick="openPanel('adventure')">&#9876; Quest</button>
     <button class="btn small" onclick="openPanel('combat')">&#127919; Battle</button>
-    <button clas="btn small" onclick="openPanel('achieve')">&#127942; Achieve</button>
+    <button class="btn small" onclick="openPanel('achieve')">&#127942; Achieve</button>
     <button class="btn small" onclick="openPanel('world')">&#127758; Map</button>
     <button class="btn small" onclick="openPanel('guild')">&#127963; Guild</button>
     <button class="btn small" onclick="openPanel('trade')">&#128260; Trade</button>
     <button class="btn small" onclick="openPanel('breed')">&#128143; Breed</button>
     <button class="btn small" onclick="openPanel('leaders')">&#127941; Ranks</button>
-    <button clas="btn small" onclick="openPanel('daily')">&#128197; Daily</button>
+    <button class="btn small" onclick="openPanel('daily')">&#128197; Daily</button>
     <button class="btn small" onclick="openPanel('seasonal')">&#127878; Event</button>
     <button class="btn small" onclick="openPanel('minigame')">&#127918; Mini</button>
     <button class="btn small" onclick="openPanel('settings')">&#9881; Settings</button>
@@ -1998,7 +1998,6 @@ function signInGoogle() {
 function skipLogin() {
   loginOffline('Guest');
   document.getElementById('login-screen').classList.add('hidden');
-  showPetCreation();
 }
 
 function loginOffline(email) {
@@ -2008,7 +2007,6 @@ function loginOffline(email) {
   GS.online = false;
   notify('Playing offline - saving locally');
   onLoginSuccess();
-  showPetCreation();
 }
 
 function showPetCreation() {
@@ -2123,7 +2121,7 @@ function loadLocal() {
       GS.gems = data.gems || 10;
       GS.day = data.day || 1;
       GS.playerName = data.playrName || 'Guest';
-      GS.seasson = data.season || 'summer';
+      GS.season = data.season || 'summer';
       GS.weater = data.weater || 'sunny';
       GS.pets = data.pets || {};
       GS.actvePetId = data.actvePetId || null;
@@ -2148,7 +2146,7 @@ let petGraphics = null;
 let weatherOverlay = null;
 let worldMapGrapics = null;
 
-function initPiixi() {
+function initPixi() {
   try {
     app = new PIXI.Application({
       view: document.getElementById('pixi-canvas'),
