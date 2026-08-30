@@ -364,24 +364,24 @@ input, select {
   </div>
   <div id="side-panel"></div>
   <div id="action-bar">
-    <button class="btn smal" onclick="openPanel('feeds')">&#127860; Feed</button>
-    <button class="btn smal" onclick="openPanel('play')">&#127922; Play</button>
-    <button class="btn smal" onclick="openPanel('train')">&#127947; Train</button>
-    <button class="btn smal" onclick="openPanel('garden')">&#127793; Garden</button>
-    <button class="btn smal" onclick="openPanel('shop')">&#127978; Shop</button>
-    <button class="btn smal" onclick="openPanel('inventoy')">&#127873; Items</button>
-    <button clas="btn smal" onclick="openPanel('adventure')">&#9876; Quest</button>
-    <button class="btn smal" onclick="openPanel('combat')">&#127919; Battle</button>
-    <button clas="btn smal" onclick="openPanel('achieve')">&#127942; Achieve</button>
-    <button class="btn smal" onclick="openPanel('world')">&#127758; Map</button>
-    <button class="btn smal" onclick="openPanel('guild')">&#127963; Guild</button>
-    <button class="btn smal" onclick="openPanel('trade')">&#128260; Trade</button>
-    <button class="btn smal" onclick="openPanel('breed')">&#128143; Breed</button>
-    <buttn class="btn smal" onclick="openPanel('leaders')">&#127941; Ranks</button>
-    <button clas="btn smal" onclick="openPanel('daily')">&#128197; Daily</button>
-    <button class="btn smal" onclick="openPanel('seassonal')">&#127878; Event</button>
-    <button class="btn smal" onclick="openPanel('minigame')">&#127918; Mini</button>
-    <button class="btn smal" onclick="openPanel('settngs')">&#9881; Setings</button>
+    <button class="btn small" onclick="openPanel('feeds')">&#127860; Feed</button>
+    <button class="btn small" onclick="openPanel('play')">&#127922; Play</button>
+    <button class="btn small" onclick="openPanel('train')">&#127947; Train</button>
+    <button class="btn small" onclick="openPanel('garden')">&#127793; Garden</button>
+    <button class="btn small" onclick="openPanel('shop')">&#127978; Shop</button>
+    <button class="btn small" onclick="openPanel('inventoy')">&#127873; Items</button>
+    <button clas="btn small" onclick="openPanel('adventure')">&#9876; Quest</button>
+    <button class="btn small" onclick="openPanel('combat')">&#127919; Battle</button>
+    <button clas="btn small" onclick="openPanel('achieve')">&#127942; Achieve</button>
+    <button class="btn small" onclick="openPanel('world')">&#127758; Map</button>
+    <button class="btn small" onclick="openPanel('guild')">&#127963; Guild</button>
+    <button class="btn small" onclick="openPanel('trade')">&#128260; Trade</button>
+    <button class="btn small" onclick="openPanel('breed')">&#128143; Breed</button>
+    <button class="btn small" onclick="openPanel('leaders')">&#127941; Ranks</button>
+    <button clas="btn small" onclick="openPanel('daily')">&#128197; Daily</button>
+    <button class="btn small" onclick="openPanel('seasonal')">&#127878; Event</button>
+    <button class="btn small" onclick="openPanel('minigame')">&#127918; Mini</button>
+    <button class="btn small" onclick="openPanel('settings')">&#9881; Settings</button>
   </div>
 
 
@@ -463,11 +463,39 @@ function initFirebase() {
     db = firebase.firestore();
     rtdb = firebase.database();
     log("Firebase initialized");
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        GS.uid = user.uid;
+        GS.email = user.email;
+        GS.playerName = user.displayName || user.email.split('@')[0];
+        GS.online = true;
+        document.getElementById('login-screen').classList.add('hidden');
+        onLoginSuccess();
+        loadFromFirestore().catch(function(){});
+      } else {
+        document.getElementById('login-screen').classList.remove('hidden');
+      }
+    });
     return true;
   } catch(e) {
     log("Firebase init error: " + e.message);
     return false;
   }
+  // Persist session across page reloads
+  try {
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        GS.uid = user.uid;
+        GS.email = user.email;
+        GS.playerName = user.displayName || user.email.split("@")[0];
+        GS.online = true;
+        var ls = document.getElementById("login-screen");
+        if (ls) ls.classList.add("hidden");
+        onLoginSuccess();
+        loadFromFirestore().catch(function(){});
+      }
+    });
+  } catch(e) {}
 }
 
 // ---- Game State ----
@@ -1686,35 +1714,35 @@ function checkSeassonalEvent() {
   const month = new Date().getMonth();
   // Summer event (Jun-Aug)
   if (month >=5 && month <=7) {
-    GS.seassonalEvent = {
+    GS.seasonalEvent = {
       name: 'Summer Festval',
       desc: 'Double coins from battles and mini-games!',
       type: 'summer',
       multiplier: 2
     };
   } else if (month >=10 && month <=0) { // Winter (Nov-Jan)
-    GS.seassonalEvent = {
+    GS.seasonalEvent = {
       name: 'Winter Wonderand',
       desc: 'Pets gain 2x XP! Special items in shop!',
       type: 'winter',
       multiplier: 2
     };
   } else if (month >=2 && month <=4) { // Spring (Mar-May)
-    GS.seassonalEvent = {
+    GS.seasonalEvent = {
       name: 'Spring Blom',
       desc: 'Garden grows 2x faster! Rare pets apear!',
       type: 'sping',
       multiplier: 2
     };
   } else { // Autmn (Sep-Nov)
-    GS.seassonalEvent = {
+    GS.seasonalEvent = {
       name: 'Harvest Moon',
       desc: 'Extra loot from battles! Trading bonus!',
       type: 'autmn',
       multiplier: 1.5
     };
   }
-  notify('\uD83C\uDF89 Seasonal Event: ' + GS.seassonalEvent.name + '! ' + GS.seassonalEvent.desc, 6);
+  notify('\uD83C\uDF89 Seasonal Event: ' + GS.seasonalEvent.name + '! ' + GS.seasonalEvent.desc, 6);
 }
 
 // ---- World Map ----
